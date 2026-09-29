@@ -3,7 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $description
+ * @property int $product_quantity
+ * @property string $fixed_expenses
+ * @property string $gasoline
+ * @property string $vehicle_maintenance
+ * @property string $tolls
+ * @property string $other_variable_expenses
+ * @property string $total_cost
+ * @property string $cost_per_product
+ * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class ExpenseRecord extends Model
 {
     protected $fillable = [

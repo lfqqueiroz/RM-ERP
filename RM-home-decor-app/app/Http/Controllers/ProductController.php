@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Http\Requests\ProductPriceCalculationUpdateRequest;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use App\Models\PriceCalculation;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Http\Requests\ProductStoreRequest;
-use App\Http\Requests\ProductUpdateRequest;
-use App\Http\Requests\ProductPriceCalculationUpdateRequest;
-
 
 class ProductController extends Controller
 {
@@ -26,14 +25,14 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(ProductStoreRequest $request):RedirectResponse
+    public function store(ProductStoreRequest $request): RedirectResponse
     {
         Product::create($request->validated());
 
         return back()->with('success', 'Produto cadastrado com sucesso');
     }
 
-    public function update(ProductUpdateRequest $request, Product $product,): RedirectResponse
+    public function update(ProductUpdateRequest $request, Product $product): RedirectResponse
     {
         $product->update($request->validated());
 
@@ -89,5 +88,4 @@ class ProductController extends Controller
 
         return back()->with('success', 'Venda registrada com sucesso.');
     }
-
 }

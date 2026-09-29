@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaleStoreRequest;
-use App\Models\Product;
 use App\Models\PriceCalculation;
+use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +46,7 @@ class SaleController extends Controller
 
     private function saveSale(SaleStoreRequest $request, ?Sale $sale = null): void
     {
-        $items = collect($request->validated('items'))
+        $items = $request->items()
             ->groupBy('product_id')
             ->map(fn ($items) => [
                 'quantity' => $items->sum('quantity'),

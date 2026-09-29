@@ -38,6 +38,9 @@ class ExpenseRecordController extends Controller
         return back()->with('success', 'Registro de gastos excluído com sucesso.');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function recordData(ExpenseRecordStoreRequest $request): array
     {
         $data = $request->validated();

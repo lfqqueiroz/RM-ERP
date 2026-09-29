@@ -4,7 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $customer_name
+ * @property string $customer_phone
+ * @property string $total_amount
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class Sale extends Model
 {
     protected $fillable = [
@@ -20,6 +29,9 @@ class Sale extends Model
         ];
     }
 
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);

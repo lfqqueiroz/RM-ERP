@@ -3,7 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $product_id
+ * @property int|null $expense_record_id
+ * @property string $product_name
+ * @property string $expense_record_description
+ * @property string $pricing_mode
+ * @property string $product_cost
+ * @property string $trip_cost_per_product
+ * @property string|null $profit_margin
+ * @property string $final_price
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class PriceCalculation extends Model
 {
     public const PRICING_MODE_MARGIN = 'margin';

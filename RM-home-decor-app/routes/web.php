@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ExpenseRecordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseRecordController;
 use App\Http\Controllers\PriceCalculationController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
+use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 

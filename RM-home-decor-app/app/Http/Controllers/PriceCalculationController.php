@@ -63,8 +63,8 @@ class PriceCalculationController extends Controller
         ?PriceCalculation $priceCalculation = null,
     ): void {
         $data = $request->validated();
-        $product = Product::findOrFail($data['product_id']);
-        $expenseRecord = ExpenseRecord::findOrFail($data['expense_record_id']);
+        $product = Product::findOrFail($request->integer('product_id'));
+        $expenseRecord = ExpenseRecord::findOrFail($request->integer('expense_record_id'));
         $productCost = (float) $product->cost_price;
         $tripCostPerProduct = (float) $expenseRecord->cost_per_product;
         $pricingMode = $data['pricing_mode'];
