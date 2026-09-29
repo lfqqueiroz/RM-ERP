@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: RM-home-decor-app
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -31,8 +35,16 @@ jobs:
         with:
           node-version: '22'
 
+      # Não usa `composer setup`: ele roda `migrate --force` contra o MySQL do
+      # .env.example, que não existe no runner. Os testes usam SQLite :memory:
+      # (phpunit.xml) e migram sozinhos via RefreshDatabase.
       - name: Setup Application
-        run: composer setup
+        run: |
+          composer install --no-interaction --no-progress
+          cp .env.example .env
+          php artisan key:generate
+          npm ci
+          npm run build
 
       - name: Run CI Checks
         run: composer ci:check
