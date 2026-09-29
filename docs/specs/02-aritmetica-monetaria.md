@@ -12,7 +12,9 @@ Além disso, `Product` não tem casts: `cost_price`/`sale_price` chegam ao front
 
 ## Decisão técnica
 
-Calcular em **centavos inteiros** com um helper próprio, sem dependência nova. Motivo: CI roda PHP 8.3 (`.github/workflows/tests.yml:25`), então `BcMath\Number` (PHP 8.4) não está disponível em todos os ambientes; inteiros bastam para as operações do domínio (soma, multiplicação por quantidade inteira, percentual, divisão com arredondamento).
+Calcular em **centavos inteiros** com um helper próprio, sem dependência nova: inteiros bastam para as operações do domínio (soma, multiplicação por quantidade inteira, percentual, divisão com arredondamento) e deixam o arredondamento explícito em um único lugar.
+
+Alternativa considerada: `BcMath\Number` (PHP 8.4). Docker e CI rodam 8.4 (o `composer.lock` exige `>=8.4.1`) e a extensão `bcmath` está instalada em ambos, então é viável; porém `composer.json` ainda declara `"php": "^8.3"`, e o helper em centavos não depende disso.
 
 ## Mudanças
 
