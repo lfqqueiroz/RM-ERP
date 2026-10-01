@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { Calculator, Pencil, Trash2 } from 'lucide-react';
+import { Calculator, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ProductSearchSelect } from '@/components/product-search-select';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,22 @@ const money = new Intl.NumberFormat('pt-BR', {
     currency: 'BRL',
 });
 
+function normalizeSearchText(text: string): string {
+    return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLocaleLowerCase('pt-BR');
+}
+
+/** Data local (fuso do navegador) no formato yyyy-mm-dd, igual ao <input type="date">. */
+function toLocalDateKey(isoDate: string): string {
+    const date = new Date(isoDate);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${date.getFullYear()}-${month}-${day}`;
+}
+
 export default function PriceCalculations({
     products,
     expenseRecords,
@@ -64,6 +80,9 @@ export default function PriceCalculations({
     const [deletingCalculationId, setDeletingCalculationId] = useState<
         number | null
     >(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     const selectedProduct = products.find(
         (product) => product.id === Number(productId),
@@ -90,6 +109,26 @@ export default function PriceCalculations({
     const canCalculate = Boolean(
         selectedProduct && selectedExpenseRecord && hasPricingValue,
     );
+
+    const normalizedSearchQuery = normalizeSearchText(searchQuery.trim());
+    const hasFilters = Boolean(normalizedSearchQuery || dateFrom || dateTo);
+    const filteredCalculations = priceCalculations.filter((calculation) => {
+        const dateKey = toLocalDateKey(calculation.created_at);
+
+        return (
+            normalizeSearchText(calculation.product_name).includes(
+                normalizedSearchQuery,
+            ) &&
+            (!dateFrom || dateKey >= dateFrom) &&
+            (!dateTo || dateKey <= dateTo)
+        );
+    });
+
+    function clearFilters() {
+        setSearchQuery('');
+        setDateFrom('');
+        setDateTo('');
+    }
 
     function saveSalePrice() {
         if (!selectedProduct || !canCalculate || isSaving) {
@@ -364,16 +403,81 @@ export default function PriceCalculations({
                     className="grid gap-3"
                     aria-labelledby="saved-prices-title"
                 >
-                    <div>
-                        <h2
-                            id="saved-prices-title"
-                            className="text-lg font-semibold"
-                        >
-                            Preços salvos
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Histórico dos preços calculados.
-                        </p>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                            <h2
+                                id="saved-prices-title"
+                                className="text-lg font-semibold"
+                            >
+                                Preços salvos
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                {hasFilters
+                                    ? `${filteredCalculations.length} de ${priceCalculations.length} ${priceCalculations.length === 1 ? 'preço' : 'preços'}`
+                                    : 'Histórico dos preços calculados.'}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                            <div className="grid gap-1 sm:w-64">
+                                <Label htmlFor="saved-prices-search">
+                                    Produto
+                                </Label>
+                                <div className="relative">
+                                    <Search
+                                        aria-hidden="true"
+                                        className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                                    />
+                                    <Input
+                                        id="saved-prices-search"
+                                        placeholder="Pesquisar por produto..."
+                                        value={searchQuery}
+                                        onChange={(event) =>
+                                            setSearchQuery(event.target.value)
+                                        }
+                                        className="pl-9"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid gap-1">
+                                <Label htmlFor="saved-prices-date-from">
+                                    De
+                                </Label>
+                                <Input
+                                    id="saved-prices-date-from"
+                                    type="date"
+                                    value={dateFrom}
+                                    max={dateTo || undefined}
+                                    onChange={(event) =>
+                                        setDateFrom(event.target.value)
+                                    }
+                                />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label htmlFor="saved-prices-date-to">
+                                    Até
+                                </Label>
+                                <Input
+                                    id="saved-prices-date-to"
+                                    type="date"
+                                    value={dateTo}
+                                    min={dateFrom || undefined}
+                                    onChange={(event) =>
+                                        setDateTo(event.target.value)
+                                    }
+                                />
+                            </div>
+                            {hasFilters && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="h-9 px-3"
+                                    onClick={clearFilters}
+                                >
+                                    Limpar
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="overflow-x-auto rounded-xl border">
@@ -407,17 +511,19 @@ export default function PriceCalculations({
                                 </tr>
                             </thead>
                             <tbody>
-                                {priceCalculations.length === 0 ? (
+                                {filteredCalculations.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={8}
                                             className="px-4 py-8 text-center text-muted-foreground"
                                         >
-                                            Nenhum preço salvo.
+                                            {priceCalculations.length === 0
+                                                ? 'Nenhum preço salvo.'
+                                                : 'Nenhum preço encontrado para os filtros aplicados.'}
                                         </td>
                                     </tr>
                                 ) : (
-                                    priceCalculations.map((calculation) => (
+                                    filteredCalculations.map((calculation) => (
                                         <tr
                                             key={calculation.id}
                                             className="border-t"
