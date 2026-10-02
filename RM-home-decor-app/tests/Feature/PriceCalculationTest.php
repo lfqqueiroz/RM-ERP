@@ -127,17 +127,59 @@ class PriceCalculationTest extends TestCase
         $this->assertDatabaseCount('price_calculations', 0);
     }
 
+    public function test_final_price_is_rounded_to_cents(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord(
+            productCost: 7.5,
+            costPerProduct: 2.5,
+        );
+
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 33.33,
+        ]);
+
+        // (7,50 + 2,50) × 1,3333 = 13,333 → 13,33
+        $this->assertSame('13.33', PriceCalculation::query()->firstOrFail()->final_price);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'sale_price' => 13.33]);
+    }
+
+    public function test_final_price_has_no_floating_point_drift(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord(
+            productCost: 0.1,
+            costPerProduct: 0.2,
+        );
+
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 10,
+        ]);
+
+        // 0,10 + 0,20 em float = 0,30000000000000004; × 1,10 = 0,33
+        $calculation = PriceCalculation::query()->firstOrFail();
+        $this->assertSame('0.10', $calculation->product_cost);
+        $this->assertSame('0.20', $calculation->trip_cost_per_product);
+        $this->assertSame('0.33', $calculation->final_price);
+    }
+
     /**
      * @return array{0: Product, 1: ExpenseRecord}
      */
-    private function createProductAndExpenseRecord(): array
-    {
+    private function createProductAndExpenseRecord(
+        float $productCost = 80,
+        float $costPerProduct = 20,
+    ): array {
         $this->actingAs(User::factory()->create());
 
         $product = Product::create([
             'name' => 'Mesa lateral',
             'sku' => 'MES-001',
-            'cost_price' => 80,
+            'cost_price' => $productCost,
             'stock' => 5,
             'minimum_stock' => 1,
         ]);
@@ -150,8 +192,8 @@ class PriceCalculationTest extends TestCase
             'vehicle_maintenance' => 0,
             'tolls' => 0,
             'other_variable_expenses' => 0,
-            'total_cost' => 40,
-            'cost_per_product' => 20,
+            'total_cost' => $costPerProduct * 4,
+            'cost_per_product' => $costPerProduct,
         ]);
 
         return [$product, $expenseRecord];

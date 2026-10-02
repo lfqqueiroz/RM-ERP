@@ -40,3 +40,12 @@ Criar factories (se ainda não existirem) para `Product`, `ExpenseRecord`, `Pric
 
 - Todos os novos testes passam contra o código atual (são testes de caracterização — se algum falhar, é bug a reportar, não a "corrigir" no teste).
 - Nenhum teste usa MySQL.
+
+## Implementação (2026-10-02)
+
+Concluída. Diferenças em relação ao plano:
+
+- **Sem factories.** Os testes seguem o padrão já existente (`Model::create` em helpers privados). Factories exigiriam adicionar `HasFactory` aos models, alterando código de produção numa spec que deveria tocar só `tests/`.
+- **`withoutVite()`** nos testes de `index`: a renderização Inertia depende do manifest do Vite; sem isso o teste falha localmente quando `public/build` está desatualizado.
+- `SaleTest` já verificava que o pedido não altera `products.stock`; nenhum complemento necessário.
+- Nenhum teste de caracterização falhou: o comportamento atual corresponde ao descrito.
