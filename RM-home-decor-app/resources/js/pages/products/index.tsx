@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -30,6 +31,7 @@ type Product = {
     cost_price: string;
     sale_price: string;
     stock: number;
+    minimum_stock: number;
     price_calculation_id: number | null;
 };
 
@@ -43,6 +45,7 @@ type PriceCalculation = {
 type Props = {
     products: Product[];
     priceCalculations: PriceCalculation[];
+    defaultMinimumStock: number;
 };
 
 type OrderItem = {
@@ -51,7 +54,11 @@ type OrderItem = {
     price_calculation_id: string;
 };
 
-export default function Products({ products, priceCalculations }: Props) {
+export default function Products({
+    products,
+    priceCalculations,
+    defaultMinimumStock,
+}: Props) {
     const [sellingProductId, setSellingProductId] = useState<number | null>(
         null,
     );
@@ -86,6 +93,7 @@ export default function Products({ products, priceCalculations }: Props) {
         sku: '',
         cost_price: '',
         stock: '',
+        minimum_stock: '',
     });
     const orderForm = useForm<{
         customer_name: string;
@@ -104,8 +112,15 @@ export default function Products({ products, priceCalculations }: Props) {
             sku: product.sku,
             cost_price: product.cost_price,
             stock: String(product.stock),
+            minimum_stock: String(product.minimum_stock),
         });
         setEditingProduct(product);
+    }
+
+    function effectiveMinimumStock(product: Product) {
+        return product.minimum_stock > 0
+            ? product.minimum_stock
+            : defaultMinimumStock;
     }
 
     function updateProduct(event: FormEvent<HTMLFormElement>) {
@@ -268,6 +283,17 @@ export default function Products({ products, priceCalculations }: Props) {
                                 label="Estoque inicial"
                                 type="number"
                                 error={errors.stock}
+                            />
+
+                            <Field
+                                name="minimum_stock"
+                                label="Estoque mínimo"
+                                type="number"
+                                min="0"
+                                step="1"
+                                defaultValue="0"
+                                hint={`Alerta quando o estoque chegar a este valor. Use 0 para o padrão de ${defaultMinimumStock} unidades.`}
+                                error={errors.minimum_stock}
                             />
 
                             <div className="md:col-span-2">
@@ -436,7 +462,21 @@ export default function Products({ products, priceCalculations }: Props) {
                                                 })}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {product.stock}
+                                                <div className="flex items-center gap-2">
+                                                    <span>{product.stock}</span>
+                                                    {product.stock <=
+                                                        effectiveMinimumStock(
+                                                            product,
+                                                        ) && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-amber-500/50 text-amber-600 dark:text-amber-400"
+                                                            title={`Estoque mínimo: ${effectiveMinimumStock(product)}${product.minimum_stock > 0 ? '' : ' (padrão)'}`}
+                                                        >
+                                                            Estoque baixo
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <Button
@@ -580,6 +620,22 @@ export default function Products({ products, priceCalculations }: Props) {
                                     onChange={(event) =>
                                         editForm.setData(
                                             'stock',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+                                <Field
+                                    name="edit_minimum_stock"
+                                    label="Estoque mínimo"
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={editForm.data.minimum_stock}
+                                    hint={`Use 0 para o padrão de ${defaultMinimumStock} unidades.`}
+                                    error={editForm.errors.minimum_stock}
+                                    onChange={(event) =>
+                                        editForm.setData(
+                                            'minimum_stock',
                                             event.target.value,
                                         )
                                     }
@@ -926,16 +982,21 @@ export default function Products({ products, priceCalculations }: Props) {
 
 function Field({
     label,
+    hint,
     error,
     ...props
 }: React.ComponentProps<typeof Input> & {
     label: string;
+    hint?: string;
     error?: string;
 }) {
     return (
         <div className="grid gap-2">
             <Label htmlFor={props.name}>{label}</Label>
             <Input id={props.name} required {...props} />
+            {hint && !error && (
+                <p className="text-xs text-muted-foreground">{hint}</p>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
     );

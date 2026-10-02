@@ -54,6 +54,6 @@ Rotas TS tipadas são geradas pelo **Wayfinder** (plugin do Vite) em `resources/
 - **ExpenseRecord** (`registros-de-gastos`): despesas de uma viagem de compra (gasolina, pedágio, manutenção etc.); `cost_per_product` = custo da viagem rateado por produto.
 - **PriceCalculation** (`calculo-de-preco`): combina um produto e um registro de gastos. Modo `margin`: `final_price = (cost_price + cost_per_product) * (1 + margem/100)`; modo `manual`: preço digitado. Guarda cópias (snapshot) de nome/custos. Ao salvar, define `product.sale_price`/`price_calculation_id`; ao editar ou excluir um cálculo, os produtos que o usavam têm `price_calculation_id` zerado e `sale_price = 0`.
 - **Sale / SaleItem** (`vendas`): encomenda com cliente; cada item referencia um `PriceCalculation` que deve pertencer ao produto, e grava snapshot de `product_name`, `product_sku`, `unit_price`. Itens do mesmo produto são agrupados; editar uma venda apaga e recria os itens.
-- **Dashboard**: agrega valor em estoque (`SUM(stock * cost_price)`), vendas por produto e alerta de estoque para `stock <= 2`.
+- **Dashboard**: agrega valor em estoque (`SUM(stock * cost_price)`), vendas por produto e alerta de estoque (`Product::lowStock()`): `stock <= minimum_stock`, ou `stock <= 2` (`Product::DEFAULT_MINIMUM_STOCK`) quando o mínimo não está configurado (`minimum_stock = 0`).
 
 Auth/configurações (login, 2FA, passkeys, perfil) vêm do starter kit via Fortify (`app/Actions/Fortify`, `routes/settings.php`).

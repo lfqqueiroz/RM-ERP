@@ -45,6 +45,7 @@ class ProductTest extends TestCase
             'sku' => 'VAS-001',
             'cost_price' => 45.5,
             'stock' => 3,
+            'minimum_stock' => 1,
         ]);
 
         $response->assertRedirect();
@@ -55,6 +56,7 @@ class ProductTest extends TestCase
             'cost_price' => 45.5,
             'sale_price' => 0,
             'stock' => 3,
+            'minimum_stock' => 1,
         ]);
     }
 
@@ -68,6 +70,7 @@ class ProductTest extends TestCase
             'sku' => 'MES-001',
             'cost_price' => 10,
             'stock' => 1,
+            'minimum_stock' => 0,
         ]);
 
         $response->assertSessionHasErrors('sku');
@@ -89,6 +92,33 @@ class ProductTest extends TestCase
         $this->assertDatabaseCount('products', 0);
     }
 
+    public function test_minimum_stock_is_required_and_cannot_be_negative(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $payload = [
+            'name' => 'Mesa',
+            'sku' => 'MES-002',
+            'cost_price' => 10,
+            'stock' => 1,
+        ];
+
+        $this->post(route('products.store'), $payload)
+            ->assertSessionHasErrors('minimum_stock');
+        $this->post(route('products.store'), [...$payload, 'minimum_stock' => -1])
+            ->assertSessionHasErrors('minimum_stock');
+        $this->assertDatabaseCount('products', 0);
+    }
+
+    public function test_index_shares_the_default_minimum_stock(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $this->withoutVite();
+
+        $this->get(route('products.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('defaultMinimumStock', Product::DEFAULT_MINIMUM_STOCK));
+    }
+
     public function test_product_can_be_updated_keeping_its_own_sku(): void
     {
         $this->actingAs(User::factory()->create());
@@ -99,6 +129,7 @@ class ProductTest extends TestCase
             'sku' => 'MES-001',
             'cost_price' => 90,
             'stock' => 7,
+            'minimum_stock' => 4,
         ]);
 
         $response->assertRedirect();
@@ -109,6 +140,7 @@ class ProductTest extends TestCase
             'sku' => 'MES-001',
             'cost_price' => 90,
             'stock' => 7,
+            'minimum_stock' => 4,
         ]);
     }
 
@@ -123,6 +155,7 @@ class ProductTest extends TestCase
             'sku' => 'MES-001',
             'cost_price' => 30,
             'stock' => 2,
+            'minimum_stock' => 0,
         ]);
 
         $response->assertSessionHasErrors('sku');

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -19,6 +21,17 @@ use Illuminate\Support\Carbon;
  */
 class Product extends Model
 {
+    /**
+     * Limite usado no alerta de estoque quando o produto não tem estoque
+     * mínimo configurado (minimum_stock = 0).
+     */
+    public const DEFAULT_MINIMUM_STOCK = 2;
+
+    /**
+     * Estoque mínimo efetivo em SQL: o configurado ou, se zero, o padrão.
+     */
+    public const EFFECTIVE_MINIMUM_STOCK_SQL = 'CASE WHEN minimum_stock > 0 THEN minimum_stock ELSE '.self::DEFAULT_MINIMUM_STOCK.' END';
+
     protected $fillable = [
         'name',
         'sku',
@@ -38,5 +51,16 @@ class Product extends Model
             'stock' => 'integer',
             'minimum_stock' => 'integer',
         ];
+    }
+
+    /**
+     * Produtos com estoque no mínimo efetivo ou abaixo dele.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function lowStock(Builder $query): void
+    {
+        $query->whereRaw('stock <= '.self::EFFECTIVE_MINIMUM_STOCK_SQL);
     }
 }

@@ -22,6 +22,7 @@ class ProductController extends Controller
             'priceCalculations' => PriceCalculation::query()
                 ->latest()
                 ->get(['id', 'product_id', 'product_name', 'final_price', 'created_at']),
+            'defaultMinimumStock' => Product::DEFAULT_MINIMUM_STOCK,
         ]);
     }
 

@@ -34,3 +34,12 @@ Não fazer update em massa no banco para preencher os mínimos.
 - Teste de dashboard: produto com `stock 5, minimum_stock 5` aparece no alerta; `stock 6, minimum_stock 5` não aparece.
 - Teste de dashboard: `minimum_stock 0` com `stock 2` aparece; com `stock 3` não aparece.
 - Testes de store/update de produto validam `minimum_stock`.
+
+## Implementação (2026-10-02)
+
+Concluída com a opção (b). Diferenças em relação ao plano:
+
+- A regra do mínimo efetivo é uma única expressão SQL (`Product::EFFECTIVE_MINIMUM_STOCK_SQL`, um `CASE`) usada pelo scope `Product::lowStock()` e pela ordenação do dashboard, em vez das duas cláusulas `where` sugeridas — mesmo resultado, regra em um só lugar.
+- O frontend recebe `defaultMinimumStock` como prop (dashboard e produtos) em vez de repetir o número 2.
+- Badge "Estoque baixo" na coluna Estoque da listagem; o tooltip mostra o mínimo efetivo e indica "(padrão)".
+- Campo "Estoque mínimo" no cadastro (valor inicial 0) e na edição, com dica explicando o padrão.

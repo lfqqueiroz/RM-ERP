@@ -49,10 +49,12 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get(['id', 'customer_name', 'total_amount', 'created_at']),
             'stockAlerts' => Product::query()
-                ->where('stock', '<=', 2)
-                ->orderBy('stock')
+                ->lowStock()
+                ->orderByRaw('('.Product::EFFECTIVE_MINIMUM_STOCK_SQL.') - stock DESC')
+                ->orderBy('name')
                 ->limit(5)
-                ->get(['id', 'name', 'sku', 'stock']),
+                ->get(['id', 'name', 'sku', 'stock', 'minimum_stock']),
+            'defaultMinimumStock' => Product::DEFAULT_MINIMUM_STOCK,
             'latestExpenseRecord' => ExpenseRecord::query()
                 ->latest()
                 ->first(['description', 'cost_per_product', 'created_at']),

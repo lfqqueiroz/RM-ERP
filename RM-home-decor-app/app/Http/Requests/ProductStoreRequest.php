@@ -19,6 +19,7 @@ class ProductStoreRequest extends FormRequest
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
             'cost_price' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
+            'minimum_stock' => ['required', 'integer', 'min:0'],
         ];
     }
 }

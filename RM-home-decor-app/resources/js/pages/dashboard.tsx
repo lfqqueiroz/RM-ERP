@@ -41,6 +41,7 @@ type StockAlert = {
     name: string;
     sku: string;
     stock: number;
+    minimum_stock: number;
 };
 
 type Props = {
@@ -48,6 +49,7 @@ type Props = {
     topProducts: TopProduct[];
     recentSales: RecentSale[];
     stockAlerts: StockAlert[];
+    defaultMinimumStock: number;
     latestExpenseRecord: {
         description: string;
         cost_per_product: string;
@@ -65,6 +67,7 @@ export default function Dashboard({
     topProducts,
     recentSales,
     stockAlerts,
+    defaultMinimumStock,
     latestExpenseRecord,
 }: Props) {
     const maxQuantity = Math.max(
@@ -176,7 +179,7 @@ export default function Dashboard({
                                     Atenção ao estoque
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
-                                    Produtos com até 2 unidades.
+                                    Produtos no estoque mínimo ou abaixo dele.
                                 </p>
                             </div>
                             <AlertTriangle className="size-5 text-amber-500" />
@@ -200,8 +203,15 @@ export default function Dashboard({
                                                 {product.sku}
                                             </span>
                                         </span>
-                                        <span className="text-sm font-semibold text-destructive">
-                                            {product.stock} un.
+                                        <span className="text-right">
+                                            <span className="block text-sm font-semibold text-destructive">
+                                                {product.stock} un.
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {product.minimum_stock > 0
+                                                    ? `mín. ${product.minimum_stock}`
+                                                    : `mín. ${defaultMinimumStock} (padrão)`}
+                                            </span>
                                         </span>
                                     </Link>
                                 ))}
