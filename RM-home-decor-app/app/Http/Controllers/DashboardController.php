@@ -14,7 +14,8 @@ class DashboardController extends Controller
 {
     public function __invoke(): Response
     {
-        $startOfMonth = now()->startOfMonth();
+        // Início do mês no fuso da loja, convertido para UTC (fuso de gravação).
+        $startOfMonth = now(config('app.display_timezone'))->startOfMonth()->utc();
 
         return Inertia::render('dashboard', [
             'metrics' => [
@@ -32,14 +33,21 @@ class DashboardController extends Controller
                     ->whereNull('price_calculation_id')
                     ->count(),
             ],
+            // Agrupa pelo produto (nome/SKU atuais); itens de produtos excluídos
+            // (product_id nulo) caem no snapshot gravado no pedido.
             'topProducts' => SaleItem::query()
+                ->leftJoin('products', 'products.id', '=', 'sale_items.product_id')
                 ->select([
-                    'product_name',
-                    'product_sku',
-                    DB::raw('SUM(quantity) as quantity_sold'),
-                    DB::raw('SUM(total_amount) as total_amount'),
+                    DB::raw('COALESCE(products.name, sale_items.product_name) as product_name'),
+                    DB::raw('COALESCE(products.sku, sale_items.product_sku) as product_sku'),
+                    DB::raw('SUM(sale_items.quantity) as quantity_sold'),
+                    DB::raw('SUM(sale_items.total_amount) as total_amount'),
                 ])
-                ->groupBy('product_name', 'product_sku')
+                ->groupBy(
+                    'sale_items.product_id',
+                    DB::raw('COALESCE(products.name, sale_items.product_name)'),
+                    DB::raw('COALESCE(products.sku, sale_items.product_sku)'),
+                )
                 ->orderByDesc('quantity_sold')
                 ->limit(5)
                 ->get(),

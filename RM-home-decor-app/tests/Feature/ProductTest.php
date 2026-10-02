@@ -109,6 +109,23 @@ class ProductTest extends TestCase
         $this->assertDatabaseCount('products', 0);
     }
 
+    public function test_validation_messages_are_in_portuguese(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $response = $this->post(route('products.store'), [
+            'sku' => 'MES-002',
+            'cost_price' => -1,
+            'stock' => 1,
+            'minimum_stock' => 0,
+        ]);
+
+        $response->assertSessionHasErrors([
+            'name' => 'É obrigatória a indicação de um valor para o campo nome.',
+            'cost_price' => 'O campo preço de custo deve ter um valor superior ou igual a 0.',
+        ]);
+    }
+
     public function test_index_shares_the_default_minimum_stock(): void
     {
         $this->actingAs(User::factory()->create());

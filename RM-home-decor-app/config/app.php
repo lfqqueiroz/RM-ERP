@@ -68,6 +68,14 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Fuso usado nas regras de negócio por data (ex.: receita do mês). Os
+    | timestamps continuam gravados em UTC ('timezone' acima); não troque
+    | aquele valor, ou o histórico já gravado seria reinterpretado.
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'America/Sao_Paulo'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
@@ -78,11 +86,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'pt_BR'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'pt_BR'),
 
     /*
     |--------------------------------------------------------------------------

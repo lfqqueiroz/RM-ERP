@@ -34,3 +34,13 @@
 - Traduzir nomes de atributos (`attributes` em `validation.php`) para os campos do domínio: `cost_price` → "preço de custo", `product_quantity` → "quantidade de produtos" etc.
 
 **Aceite:** teste que envia produto sem `name` e verifica mensagem de erro em português.
+
+## Implementação (2026-10-02)
+
+Concluída.
+
+- **7.1:** `LEFT JOIN products` e agrupamento por `product_id` + `COALESCE(nome/SKU atual, snapshot)`. Validado com `SELECT` somente leitura no MySQL real (`ONLY_FULL_GROUP_BY` ativo).
+- **7.2:** `config('app.display_timezone')` (env `APP_DISPLAY_TIMEZONE`, padrão `America/Sao_Paulo`); `app.timezone` continua `UTC`. O teste de virada de mês falha contra o código antigo.
+- **7.3:** `laravel-lang/common` (dev) instalado **dentro do container** (PHP 8.4) e `php artisan lang:add pt_BR`; nenhum pacote existente mudou de versão no lock. Nomes de atributos do domínio acrescentados em `lang/pt_BR/validation.php` (e corrigidos `product_id` → "produto", `items` → "itens"). `lang/` excluído do Pint por ser gerado. Padrões: `locale` `pt_BR`, `fallback_locale` `en`; `phpunit.xml` fixa o idioma dos testes.
+- Achado: o `.env.example` já tinha `APP_FALLBACK_LOCALE=pt_BR` sem arquivos de tradução, o que exibiria chaves cruas (`validation.required`); corrigido para `en`.
+- O `.env` local do usuário continua em `en` — precisa ser ajustado manualmente (`APP_LOCALE=pt_BR`, `APP_FALLBACK_LOCALE=en`, `APP_FAKER_LOCALE=pt_BR`).
