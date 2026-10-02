@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ExpenseRecordStoreRequest;
 use App\Models\ExpenseRecord;
+use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,18 +45,20 @@ class ExpenseRecordController extends Controller
     private function recordData(ExpenseRecordStoreRequest $request): array
     {
         $data = $request->validated();
-        $totalCost = collect([
+        $totalCostCents = collect([
             $data['fixed_expenses'],
             $data['gasoline'],
             $data['vehicle_maintenance'],
             $data['tolls'],
             $data['other_variable_expenses'],
-        ])->sum();
+        ])->sum(fn (string|int|float $value): int => Money::toCents($value));
 
         return [
             ...$data,
-            'total_cost' => $totalCost,
-            'cost_per_product' => $totalCost / $data['product_quantity'],
+            'total_cost' => Money::fromCents($totalCostCents),
+            'cost_per_product' => Money::fromCents(
+                Money::divide($totalCostCents, $request->integer('product_quantity')),
+            ),
         ];
     }
 }

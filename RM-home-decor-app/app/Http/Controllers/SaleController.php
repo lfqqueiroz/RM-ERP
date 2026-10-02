@@ -6,6 +6,7 @@ use App\Http\Requests\SaleStoreRequest;
 use App\Models\PriceCalculation;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -87,15 +88,12 @@ class SaleController extends Controller
                     'total_amount' => 0,
                 ]);
             }
-            $totalAmount = 0;
+            $totalAmountCents = 0;
 
             foreach ($items as $productId => $item) {
                 $product = $products->get($productId);
                 $priceCalculation = $priceCalculations->get($item['price_calculation_id']);
-                $itemTotal = round(
-                    (float) $priceCalculation->final_price * $item['quantity'],
-                    2,
-                );
+                $itemTotalCents = Money::toCents($priceCalculation->final_price) * $item['quantity'];
 
                 $sale->items()->create([
                     'product_id' => $product->id,
@@ -104,14 +102,13 @@ class SaleController extends Controller
                     'product_sku' => $product->sku,
                     'quantity' => $item['quantity'],
                     'unit_price' => $priceCalculation->final_price,
-                    'total_amount' => $itemTotal,
+                    'total_amount' => Money::fromCents($itemTotalCents),
                 ]);
 
-                $totalAmount += $itemTotal;
+                $totalAmountCents += $itemTotalCents;
             }
 
-            $sale->update(['total_amount' => $totalAmount]);
+            $sale->update(['total_amount' => Money::fromCents($totalAmountCents)]);
         });
-
     }
 }

@@ -167,6 +167,24 @@ class PriceCalculationTest extends TestCase
         $this->assertSame('0.33', $calculation->final_price);
     }
 
+    public function test_exact_half_cent_rounds_up(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord(
+            productCost: 2754.66,
+            costPerProduct: 193.99,
+        );
+
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 910,
+        ]);
+
+        // 2948,65 × 10,10 = 29781,365 → 29781,37 (com float saía 29781,36)
+        $this->assertSame('29781.37', PriceCalculation::query()->firstOrFail()->final_price);
+    }
+
     /**
      * @return array{0: Product, 1: ExpenseRecord}
      */

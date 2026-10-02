@@ -39,3 +39,12 @@ Half-up em 2 casas, igual ao `round()` atual do PHP para valores positivos — p
 - Testes unitários de `Money` (`tests/Unit/MoneyTest.php`): parse, formatação, percentual com arredondamento (ex.: 10,00 × 33,33% = 13,33), divisão (100,00 / 3 = 33,33), valores zero.
 - Testes da Spec 11 continuam passando com os mesmos valores esperados.
 - Nenhuma migration.
+
+## Implementação (2026-10-02)
+
+Concluída, com as duas diferenças de comportamento aprovadas pelo usuário:
+
+1. **Empate exato no meio centavo** (ex.: 2948,65 × 10,10 = 29781,365): agora arredonda para cima (29781,37); com float saía 29781,36. Em 200 mil combinações aleatórias, 34 casos (0,017%), sempre +1 centavo. Registros de gastos e pedidos: nenhuma diferença.
+2. **Margem com 3+ casas:** o preço passa a usar a margem como é gravada (duas casas), em vez do valor digitado com mais precisão.
+
+Valores já salvos não são recalculados. Regressões cobertas em `tests/Unit/MoneyTest.php` e `PriceCalculationTest::test_exact_half_cent_rounds_up`.

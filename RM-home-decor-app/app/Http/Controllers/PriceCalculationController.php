@@ -6,6 +6,7 @@ use App\Http\Requests\PriceCalculationStoreRequest;
 use App\Models\ExpenseRecord;
 use App\Models\PriceCalculation;
 use App\Models\Product;
+use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -65,17 +66,20 @@ class PriceCalculationController extends Controller
         $data = $request->validated();
         $product = Product::findOrFail($request->integer('product_id'));
         $expenseRecord = ExpenseRecord::findOrFail($request->integer('expense_record_id'));
-        $productCost = (float) $product->cost_price;
-        $tripCostPerProduct = (float) $expenseRecord->cost_per_product;
+        $productCostCents = Money::toCents($product->cost_price);
+        $tripCostPerProductCents = Money::toCents($expenseRecord->cost_per_product);
         $pricingMode = $data['pricing_mode'];
         $isManualPrice = $pricingMode === PriceCalculation::PRICING_MODE_MANUAL;
-        $profitMargin = $isManualPrice ? null : (float) $data['profit_margin'];
-        $finalPrice = $isManualPrice
-            ? round((float) $data['final_price'], 2)
-            : round(
-                ($productCost + $tripCostPerProduct) * (1 + ($profitMargin / 100)),
-                2,
-            );
+        // A margem é gravada com duas casas; o preço usa exatamente o valor gravado.
+        $profitMargin = $isManualPrice
+            ? null
+            : Money::fromCents(Money::toCents($data['profit_margin']));
+        $finalPriceCents = $profitMargin === null
+            ? Money::toCents($data['final_price'])
+            : Money::applyPercent($productCostCents + $tripCostPerProductCents, $profitMargin);
+        $productCost = Money::fromCents($productCostCents);
+        $tripCostPerProduct = Money::fromCents($tripCostPerProductCents);
+        $finalPrice = Money::fromCents($finalPriceCents);
 
         DB::transaction(function () use (
             $product,

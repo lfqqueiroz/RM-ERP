@@ -28,4 +28,15 @@ class Product extends Model
         'stock',
         'minimum_stock',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'cost_price' => 'decimal:2',
+            'sale_price' => 'decimal:2',
+            'price_calculation_id' => 'integer',
+            'stock' => 'integer',
+            'minimum_stock' => 'integer',
+        ];
+    }
 }
