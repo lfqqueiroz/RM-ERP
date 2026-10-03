@@ -63,3 +63,24 @@ export function calculateMarkupPrice(
 
     return quotient;
 }
+
+/**
+ * Divide centavos por um inteiro com arredondamento half-up — mesma regra de
+ * App\Support\Money::divide (custo da viagem rateado por produto).
+ */
+export function divideCents(cents: bigint, divisor: number): bigint {
+    if (divisor <= 0) {
+        return 0n;
+    }
+
+    const bigDivisor = BigInt(divisor);
+    const quotient = cents / bigDivisor;
+    const remainder = cents % bigDivisor;
+    const absRemainder = remainder < 0n ? -remainder : remainder;
+
+    if (absRemainder * 2n >= bigDivisor) {
+        return quotient + (cents < 0n ? -1n : 1n);
+    }
+
+    return quotient;
+}
