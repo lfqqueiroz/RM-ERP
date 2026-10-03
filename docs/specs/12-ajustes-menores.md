@@ -36,3 +36,13 @@ Hoje: `GET calculo-de-preco`, mas `POST/PUT/DELETE calculos-de-preco`; `GET regi
 - Teste: pedido com item cujo `price_calculation_id` é de outro produto → erro em `items.0.price_calculation_id`.
 - Teste: `updatePriceCalculation` com cálculo de outro produto → 422 (atualizar o teste da Spec 11 que esperava 404).
 - Teste: `GET /calculo-de-preco` e `GET /registros-de-vendas` → 301 para as novas URLs.
+
+## Implementação (2026-10-02)
+
+Concluída.
+
+- **12.1:** relações que faltavam (`Product::priceCalculations/saleItems`, `PriceCalculation::activeProducts`, `ExpenseRecord::priceCalculations`, `SaleItem::priceCalculation`); as de `PriceCalculation::product/expenseRecord` e `Product::priceCalculation` vieram na Spec 06. `PriceCalculation::detachFromActiveProducts()` substitui as duas consultas manuais repetidas no controller.
+- **12.2:** `SaleStoreRequest::after()` valida cada item com a chave `items.{i}.price_calculation_id` (antes: `items`, genérico). `ProductPriceCalculationUpdateRequest` usa `Rule::exists(...)->where('product_id', ...)`: cálculo de outro produto passa de 404 a erro de validação com mensagem.
+- **Além do previsto:** as telas de pedido (Produtos → Criar pedido, e edição em Vendas) só exibiam `errors.items` — erros por item (incluindo quantidade) nunca apareciam. Agora cada linha mostra os próprios erros (`lib/form-errors.ts`). A troca de preço salvo em Produtos mostra o erro em toast.
+- **12.3:** `GET calculos-de-preco` e `GET vendas`; URLs antigas com 301. Nomes das rotas inalterados (Wayfinder regenerado). Links fixos no frontend e `CLAUDE.md` atualizados.
+- **12.4:** já resolvido pelo Pint (Spec 03) e pela Spec 02.

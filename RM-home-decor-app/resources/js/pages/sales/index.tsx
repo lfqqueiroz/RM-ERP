@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { itemErrors } from '@/lib/form-errors';
 
 type SaleItem = {
     id: number;
@@ -429,6 +430,17 @@ export default function Sales({ sales, products, priceCalculations }: Props) {
                                         >
                                             <X />
                                         </Button>
+
+                                        {itemErrors(editForm.errors, index).map(
+                                            (message) => (
+                                                <p
+                                                    key={message}
+                                                    className="text-sm text-destructive sm:col-span-4"
+                                                >
+                                                    {message}
+                                                </p>
+                                            ),
+                                        )}
                                     </div>
                                 ))}
 
@@ -470,7 +482,7 @@ Sales.layout = {
     breadcrumbs: [
         {
             title: 'Registros de vendas',
-            href: '/registros-de-vendas',
+            href: '/vendas',
         },
     ],
 };

@@ -121,7 +121,7 @@ export default function Dashboard({
                                 : 'Produtos sem preço calculado'
                         }
                         icon={Tag}
-                        href="/calculo-de-preco"
+                        href="/calculos-de-preco"
                     />
                 </div>
 
@@ -137,7 +137,7 @@ export default function Dashboard({
                                 </p>
                             </div>
                             <Link
-                                href="/registros-de-vendas"
+                                href="/vendas"
                                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                             >
                                 Ver vendas <ArrowRight className="size-4" />
@@ -300,7 +300,7 @@ export default function Dashboard({
                                     )}
                                 </p>
                                 <Link
-                                    href="/calculo-de-preco"
+                                    href="/calculos-de-preco"
                                     className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                                 >
                                     Calcular preços{' '}

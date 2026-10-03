@@ -9,7 +9,7 @@ RM ERP: ERP enxuto de estoque e preços para uma loja de decoração. Laravel 13
 ## Regras importantes
 
 - **Não mexer no banco de dados.** O MySQL (volume `mysql_data`) tem dados reais. Não rodar/criar migrations, `migrate*`, seeders, `tinker` com escrita, SQL direto nem `docker compose down -v`. Se uma mudança exigir alteração de schema, descrever a proposta e pedir autorização.
-- **Pedido ≠ baixa de estoque.** `SaleController` (`/vendas`, `/registros-de-vendas`) registra apenas encomendas: não altera `products.stock` e pode exceder o saldo. A única baixa de estoque é `ProductController::sell` (botão "Vender", `POST /produtos/{product}/venda`, decrementa 1 unidade). É regra de negócio, não bug.
+- **Pedido ≠ baixa de estoque.** `SaleController` (`/vendas`) registra apenas encomendas: não altera `products.stock` e pode exceder o saldo. A única baixa de estoque é `ProductController::sell` (botão "Vender", `POST /produtos/{product}/venda`, decrementa 1 unidade). É regra de negócio, não bug.
 - Valores monetários são `decimal` (casts `decimal:2`), nunca `float` persistido.
 
 ## Comandos
@@ -52,7 +52,7 @@ Rotas TS tipadas são geradas pelo **Wayfinder** (plugin do Vite) em `resources/
 
 - **Product** (`produtos`): `cost_price`, `sale_price`, `stock`, `minimum_stock` e `price_calculation_id` (o cálculo de preço ativo).
 - **ExpenseRecord** (`registros-de-gastos`): despesas de uma viagem de compra (gasolina, pedágio, manutenção etc.); `cost_per_product` = custo da viagem rateado por produto.
-- **PriceCalculation** (`calculo-de-preco`): combina um produto e um registro de gastos. Modo `margin` (na tela, "markup sobre o custo"; `profit_margin` guarda o markup, não a margem sobre a venda): `final_price = (cost_price + cost_per_product) * (1 + profit_margin/100)`; modo `manual`: preço digitado. Guarda cópias (snapshot) de nome/custos. Ao salvar, define `product.sale_price`/`price_calculation_id`; ao editar ou excluir um cálculo, os produtos que o usavam têm `price_calculation_id` zerado e `sale_price = 0`.
+- **PriceCalculation** (`calculos-de-preco`): combina um produto e um registro de gastos. Modo `margin` (na tela, "markup sobre o custo"; `profit_margin` guarda o markup, não a margem sobre a venda): `final_price = (cost_price + cost_per_product) * (1 + profit_margin/100)`; modo `manual`: preço digitado. Guarda cópias (snapshot) de nome/custos. Ao salvar, define `product.sale_price`/`price_calculation_id`; ao editar ou excluir um cálculo, os produtos que o usavam têm `price_calculation_id` zerado e `sale_price = 0`.
 - **Sale / SaleItem** (`vendas`): encomenda com cliente; cada item referencia um `PriceCalculation` que deve pertencer ao produto, e grava snapshot de `product_name`, `product_sku`, `unit_price`. Itens do mesmo produto são agrupados; editar uma venda apaga e recria os itens.
 - **Dashboard**: agrega valor em estoque (`SUM(stock * cost_price)`), vendas por produto e alerta de estoque (`Product::lowStock()`): `stock <= minimum_stock`, ou `stock <= 2` (`Product::DEFAULT_MINIMUM_STOCK`) quando o mínimo não está configurado (`minimum_stock = 0`).
 

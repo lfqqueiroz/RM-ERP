@@ -48,12 +48,7 @@ class PriceCalculationController extends Controller
     public function destroy(PriceCalculation $priceCalculation): RedirectResponse
     {
         DB::transaction(function () use ($priceCalculation): void {
-            Product::query()
-                ->where('price_calculation_id', $priceCalculation->id)
-                ->update([
-                    'price_calculation_id' => null,
-                    'sale_price' => 0,
-                ]);
+            $priceCalculation->detachFromActiveProducts();
 
             $priceCalculation->delete();
         });
@@ -94,12 +89,7 @@ class PriceCalculationController extends Controller
             $priceCalculation,
         ): void {
             if ($priceCalculation) {
-                Product::query()
-                    ->where('price_calculation_id', $priceCalculation->id)
-                    ->update([
-                        'price_calculation_id' => null,
-                        'sale_price' => 0,
-                    ]);
+                $priceCalculation->detachFromActiveProducts();
             }
 
             $calculationData = [

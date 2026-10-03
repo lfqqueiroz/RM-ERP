@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -89,5 +90,23 @@ class Product extends Model
         return Attribute::get(
             fn (): bool => $this->priceCalculation?->hasOutdatedCosts($this) ?? false,
         );
+    }
+
+    /**
+     * Todos os cálculos de preço já feitos para o produto.
+     *
+     * @return HasMany<PriceCalculation, $this>
+     */
+    public function priceCalculations(): HasMany
+    {
+        return $this->hasMany(PriceCalculation::class);
+    }
+
+    /**
+     * @return HasMany<SaleItem, $this>
+     */
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
     }
 }

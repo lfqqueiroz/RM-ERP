@@ -246,7 +246,9 @@ class ProductTest extends TestCase
             'price_calculation_id' => $otherCalculation->id,
         ]);
 
-        $response->assertNotFound();
+        $response->assertSessionHasErrors([
+            'price_calculation_id' => 'Selecione um preço salvo deste produto.',
+        ]);
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
             'price_calculation_id' => null,

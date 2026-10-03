@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -47,5 +48,13 @@ class ExpenseRecord extends Model
             'total_cost' => 'decimal:2',
             'cost_per_product' => 'decimal:2',
         ];
+    }
+
+    /**
+     * @return HasMany<PriceCalculation, $this>
+     */
+    public function priceCalculations(): HasMany
+    {
+        return $this->hasMany(PriceCalculation::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Support\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -98,5 +99,27 @@ class PriceCalculation extends Model
     protected function isOutdated(): Attribute
     {
         return Attribute::get(fn (): bool => $this->hasOutdatedCosts());
+    }
+
+    /**
+     * Produtos que usam este cálculo como preço ativo (products.price_calculation_id).
+     *
+     * @return HasMany<Product, $this>
+     */
+    public function activeProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'price_calculation_id');
+    }
+
+    /**
+     * Desvincula este cálculo dos produtos que o usam como preço ativo,
+     * zerando o preço de venda deles.
+     */
+    public function detachFromActiveProducts(): void
+    {
+        $this->activeProducts()->update([
+            'price_calculation_id' => null,
+            'sale_price' => 0,
+        ]);
     }
 }

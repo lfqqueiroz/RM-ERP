@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Product;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductPriceCalculationUpdateRequest extends FormRequest
 {
@@ -15,7 +17,24 @@ class ProductPriceCalculationUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'price_calculation_id' => ['nullable', 'integer', 'exists:price_calculations,id'],
+            // O preço salvo precisa ser do próprio produto da rota.
+            'price_calculation_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('price_calculations', 'id')
+                    ->where('product_id', $this->product()->id),
+            ],
         ];
+    }
+
+    public function product(): Product
+    {
+        $product = $this->route('product');
+
+        if (! $product instanceof Product) {
+            abort(404);
+        }
+
+        return $product;
     }
 }

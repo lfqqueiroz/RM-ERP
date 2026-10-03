@@ -55,4 +55,12 @@ class SaleItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * @return BelongsTo<PriceCalculation, $this>
+     */
+    public function priceCalculation(): BelongsTo
+    {
+        return $this->belongsTo(PriceCalculation::class);
+    }
 }

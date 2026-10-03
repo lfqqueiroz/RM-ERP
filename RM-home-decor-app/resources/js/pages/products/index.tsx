@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { itemErrors } from '@/lib/form-errors';
 
 type Product = {
     id: number;
@@ -223,6 +225,13 @@ export default function Products({
             { price_calculation_id: priceCalculationId || null },
             {
                 preserveScroll: true,
+                onError: (errors) => {
+                    const message = Object.values(errors)[0];
+
+                    if (message) {
+                        toast.error(message);
+                    }
+                },
                 onFinish: () => setUpdatingPriceProductId(null),
             },
         );
@@ -951,6 +960,18 @@ export default function Products({
                                             >
                                                 <X />
                                             </Button>
+
+                                            {itemErrors(
+                                                orderForm.errors,
+                                                index,
+                                            ).map((message) => (
+                                                <p
+                                                    key={message}
+                                                    className="text-sm text-destructive sm:col-span-4"
+                                                >
+                                                    {message}
+                                                </p>
+                                            ))}
                                         </div>
                                     );
                                 })}

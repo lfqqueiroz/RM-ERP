@@ -9,7 +9,6 @@ use App\Models\Sale;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -62,16 +61,6 @@ class SaleController extends Controller
             ->whereKey($items->pluck('price_calculation_id'))
             ->get()
             ->keyBy('id');
-
-        foreach ($items as $productId => $item) {
-            $priceCalculation = $priceCalculations->get($item['price_calculation_id']);
-
-            if (! $priceCalculation || $priceCalculation->product_id !== (int) $productId) {
-                throw ValidationException::withMessages([
-                    'items' => 'Selecione um preço salvo que pertença ao produto escolhido.',
-                ]);
-            }
-        }
 
         DB::transaction(function () use ($items, $products, $priceCalculations, $request, $sale): void {
             if ($sale) {

@@ -67,10 +67,8 @@ class ProductController extends Controller
             return back()->with('success', 'Preço salvo removido com sucesso.');
         }
 
-        $priceCalculation = PriceCalculation::query()
-            ->whereKey($priceCalculationId)
-            ->where('product_id', $product->id)
-            ->firstOrFail();
+        // O Form Request já garante que o cálculo é deste produto.
+        $priceCalculation = PriceCalculation::findOrFail($request->integer('price_calculation_id'));
 
         $product->update([
             'price_calculation_id' => $priceCalculation->id,

@@ -33,7 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('registros-de-gastos/{expenseRecord}', [ExpenseRecordController::class, 'destroy'])
         ->name('expense-records.destroy');
 
-    Route::get('calculo-de-preco', [PriceCalculationController::class, 'index'])
+    Route::get('calculos-de-preco', [PriceCalculationController::class, 'index'])
         ->name('price-calculations.index');
     Route::post('calculos-de-preco', [PriceCalculationController::class, 'store'])
         ->name('price-calculations.store');
@@ -42,10 +42,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('calculos-de-preco/{priceCalculation}', [PriceCalculationController::class, 'destroy'])
         ->name('price-calculations.destroy');
 
-    Route::get('registros-de-vendas', [SaleController::class, 'index'])
+    Route::get('vendas', [SaleController::class, 'index'])
         ->name('sales.index');
     Route::post('vendas', [SaleController::class, 'store'])->name('sales.store');
     Route::put('vendas/{sale}', [SaleController::class, 'update'])->name('sales.update');
 });
+
+// URLs antigas (mantidas para favoritos e links salvos).
+Route::permanentRedirect('calculo-de-preco', 'calculos-de-preco');
+Route::permanentRedirect('registros-de-vendas', 'vendas');
 
 require __DIR__.'/settings.php';

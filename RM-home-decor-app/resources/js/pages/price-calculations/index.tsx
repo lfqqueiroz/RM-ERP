@@ -679,7 +679,7 @@ PriceCalculations.layout = {
     breadcrumbs: [
         {
             title: 'Cálculo de preço',
-            href: '/calculo-de-preco',
+            href: '/calculos-de-preco',
         },
     ],
 };

@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PriceCalculation;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Validator;
 
 class SaleStoreRequest extends FormRequest
 {
@@ -22,6 +25,40 @@ class SaleStoreRequest extends FormRequest
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.price_calculation_id' => ['required', 'integer', 'exists:price_calculations,id'],
+        ];
+    }
+
+    /**
+     * Cada item deve usar um preço salvo do próprio produto.
+     *
+     * @return array<int, Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $items = $this->input('items');
+
+                // Só verifica a combinação depois que as regras básicas passaram.
+                if ($validator->errors()->isNotEmpty() || ! is_array($items)) {
+                    return;
+                }
+
+                $productIdByCalculation = PriceCalculation::query()
+                    ->whereKey(array_column($items, 'price_calculation_id'))
+                    ->pluck('product_id', 'id');
+
+                foreach ($items as $index => $item) {
+                    $calculationProductId = $productIdByCalculation->get((int) $item['price_calculation_id']);
+
+                    if ($calculationProductId !== (int) $item['product_id']) {
+                        $validator->errors()->add(
+                            "items.{$index}.price_calculation_id",
+                            'Selecione um preço salvo que pertença ao produto escolhido.',
+                        );
+                    }
+                }
+            },
         ];
     }
 

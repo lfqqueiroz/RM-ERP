@@ -165,6 +165,9 @@ return [
         'profit_margin' => [
             'required_if' => 'Informe o markup.',
         ],
+        'price_calculation_id' => [
+            'exists' => 'Selecione um preço salvo deste produto.',
+        ],
     ],
     'attributes'             => [
         'address'                  => 'endereço',

@@ -42,12 +42,12 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Cálculo de preço',
-        href: '/calculo-de-preco',
+        href: '/calculos-de-preco',
         icon: Calculator,
     },
     {
         title: 'Registros de vendas',
-        href: '/registros-de-vendas',
+        href: '/vendas',
         icon: ShoppingBag,
     },
 ];
