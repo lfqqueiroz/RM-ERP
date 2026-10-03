@@ -33,6 +33,8 @@ type Product = {
     stock: number;
     minimum_stock: number;
     price_calculation_id: number | null;
+    /** O custo mudou desde o cálculo do preço ativo. */
+    is_price_outdated: boolean;
 };
 
 type PriceCalculation = {
@@ -454,12 +456,30 @@ export default function Products({
                                                 </select>
                                             </td>
                                             <td className="px-4 py-3 font-medium">
-                                                {Number(
-                                                    product.sale_price,
-                                                ).toLocaleString('pt-BR', {
-                                                    style: 'currency',
-                                                    currency: 'BRL',
-                                                })}
+                                                <div className="flex items-center gap-1.5">
+                                                    {Number(
+                                                        product.sale_price,
+                                                    ).toLocaleString('pt-BR', {
+                                                        style: 'currency',
+                                                        currency: 'BRL',
+                                                    })}
+                                                    {product.is_price_outdated && (
+                                                        <TriangleAlert
+                                                            role="img"
+                                                            aria-label="Custo alterado desde o cálculo deste preço"
+                                                            className="size-4 text-amber-500"
+                                                        >
+                                                            <title>
+                                                                O custo mudou
+                                                                desde o cálculo
+                                                                deste preço.
+                                                                Recalcule em
+                                                                Cálculo de
+                                                                preço.
+                                                            </title>
+                                                        </TriangleAlert>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">

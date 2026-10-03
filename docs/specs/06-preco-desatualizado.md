@@ -25,3 +25,13 @@ O snapshot é intencional e **não deve** ser recalculado automaticamente. Falta
 - Teste: criar cálculo, alterar `cost_price` do produto → `is_outdated = true`; editar o cálculo → `false`.
 - Teste: excluir registro de gastos → `is_outdated = false`.
 - Nenhuma escrita em `products`/`price_calculations` disparada pela verificação.
+
+## Implementação (2026-10-02)
+
+Concluída.
+
+- Relações adicionadas (antecipando parte da Spec 12.1): `PriceCalculation::product()`, `PriceCalculation::expenseRecord()`, `Product::priceCalculation()`.
+- Regra em `PriceCalculation::hasOutdatedCosts(?Product)`, comparando em centavos (`Money`); exposta como `is_outdated` (cálculos) e `Product::is_price_outdated` (preço ativo). O dashboard usa a mesma regra em SQL (`metrics.outdated_prices`), exibida no card "Preços pendentes".
+- Em vez de accessors para os custos atuais, as relações carregadas (só `id` + custo) vão na resposta; o tooltip do badge compara snapshot × atual no frontend. (Accessors `Attribute<string|null>` esbarravam na invariância do genérico no Larastan.)
+- Eager loading: 3 consultas por tela, independente do número de linhas. Validado com leitura no MySQL real: SQL e PHP concordam (2 produtos desatualizados no momento da implementação).
+- Nenhuma escrita é disparada pela verificação (coberto em teste).

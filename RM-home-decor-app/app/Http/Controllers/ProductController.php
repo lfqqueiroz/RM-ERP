@@ -17,8 +17,14 @@ class ProductController extends Controller
     {
         return Inertia::render('products/index', [
             'products' => Product::query()
+                ->with([
+                    'priceCalculation:id,expense_record_id,product_cost,trip_cost_per_product',
+                    'priceCalculation.expenseRecord:id,cost_per_product',
+                ])
                 ->latest()
-                ->get(),
+                ->get()
+                ->makeHidden('priceCalculation')
+                ->append('is_price_outdated'),
             'priceCalculations' => PriceCalculation::query()
                 ->latest()
                 ->get(['id', 'product_id', 'product_name', 'final_price', 'created_at']),

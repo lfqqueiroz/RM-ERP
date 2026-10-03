@@ -19,6 +19,7 @@ type Metrics = {
     stock_units: number;
     out_of_stock: number;
     without_price: number;
+    outdated_prices: number;
 };
 
 type TopProduct = {
@@ -114,7 +115,11 @@ export default function Dashboard({
                     <MetricCard
                         label="Preços pendentes"
                         value={String(metrics.without_price)}
-                        description="Produtos sem preço calculado"
+                        description={
+                            metrics.outdated_prices > 0
+                                ? `Produtos sem preço calculado · ${metrics.outdated_prices} com custo alterado`
+                                : 'Produtos sem preço calculado'
+                        }
                         icon={Tag}
                         href="/calculo-de-preco"
                     />

@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { Calculator, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ProductSearchSelect } from '@/components/product-search-select';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,12 +42,42 @@ type PriceCalculation = {
     profit_margin: string | null;
     final_price: string;
     created_at: string;
+    /** O custo do produto ou da viagem mudou desde que o cálculo foi salvo. */
+    is_outdated: boolean;
+    product: { id: number; cost_price: string } | null;
+    expense_record: { id: number; cost_per_product: string } | null;
 };
 
 const money = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
 });
+
+function outdatedCostsDescription(calculation: PriceCalculation): string {
+    const changes: string[] = [];
+
+    if (
+        calculation.product &&
+        Number(calculation.product.cost_price) !==
+            Number(calculation.product_cost)
+    ) {
+        changes.push(
+            `Custo do produto: ${money.format(Number(calculation.product_cost))} → ${money.format(Number(calculation.product.cost_price))}`,
+        );
+    }
+
+    if (
+        calculation.expense_record &&
+        Number(calculation.expense_record.cost_per_product) !==
+            Number(calculation.trip_cost_per_product)
+    ) {
+        changes.push(
+            `Custo da viagem: ${money.format(Number(calculation.trip_cost_per_product))} → ${money.format(Number(calculation.expense_record.cost_per_product))}`,
+        );
+    }
+
+    return `${changes.join('\n')}\nEdite o cálculo para recalcular com os custos atuais.`;
+}
 
 function normalizeSearchText(text: string): string {
     return text
@@ -492,7 +523,24 @@ export default function PriceCalculations({
                                                 ).toLocaleDateString('pt-BR')}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {calculation.product_name}
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span>
+                                                        {
+                                                            calculation.product_name
+                                                        }
+                                                    </span>
+                                                    {calculation.is_outdated && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-amber-500/50 text-amber-600 dark:text-amber-400"
+                                                            title={outdatedCostsDescription(
+                                                                calculation,
+                                                            )}
+                                                        >
+                                                            Custo alterado
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 {

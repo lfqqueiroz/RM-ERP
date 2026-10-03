@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -18,6 +20,8 @@ use Illuminate\Support\Carbon;
  * @property int $minimum_stock
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read PriceCalculation|null $priceCalculation
+ * @property-read bool $is_price_outdated
  */
 class Product extends Model
 {
@@ -62,5 +66,28 @@ class Product extends Model
     protected function lowStock(Builder $query): void
     {
         $query->whereRaw('stock <= '.self::EFFECTIVE_MINIMUM_STOCK_SQL);
+    }
+
+    /**
+     * Cálculo de preço ativo (o que define o sale_price).
+     *
+     * @return BelongsTo<PriceCalculation, $this>
+     */
+    public function priceCalculation(): BelongsTo
+    {
+        return $this->belongsTo(PriceCalculation::class);
+    }
+
+    /**
+     * Se o custo mudou desde o cálculo de preço ativo. Carregue
+     * `priceCalculation.expenseRecord` antes de serializar.
+     *
+     * @return Attribute<bool, never>
+     */
+    protected function isPriceOutdated(): Attribute
+    {
+        return Attribute::get(
+            fn (): bool => $this->priceCalculation?->hasOutdatedCosts($this) ?? false,
+        );
     }
 }

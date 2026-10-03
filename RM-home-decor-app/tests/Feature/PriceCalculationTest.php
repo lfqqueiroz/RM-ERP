@@ -7,6 +7,7 @@ use App\Models\PriceCalculation;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PriceCalculationTest extends TestCase
@@ -183,6 +184,99 @@ class PriceCalculationTest extends TestCase
 
         // 2948,65 × 10,10 = 29781,365 → 29781,37 (com float saía 29781,36)
         $this->assertSame('29781.37', PriceCalculation::query()->firstOrFail()->final_price);
+    }
+
+    public function test_calculation_is_outdated_after_product_cost_changes_and_fresh_after_editing(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord();
+        $payload = [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 50,
+        ];
+        $this->post(route('price-calculations.store'), $payload);
+        $calculation = PriceCalculation::query()->firstOrFail();
+
+        $this->assertOutdatedFlags([false]);
+
+        $product->update(['cost_price' => 90]);
+        $this->assertOutdatedFlags([true]);
+        $this->assertDatabaseHas('price_calculations', [
+            'id' => $calculation->id,
+            'product_cost' => 80,
+            'final_price' => 150,
+        ]);
+
+        $this->put(route('price-calculations.update', $calculation), $payload);
+        $this->assertOutdatedFlags([false]);
+        $this->assertDatabaseHas('price_calculations', [
+            'id' => $calculation->id,
+            'product_cost' => 90,
+            'final_price' => 165,
+        ]);
+    }
+
+    public function test_calculation_is_outdated_after_trip_cost_changes(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord();
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 50,
+        ]);
+
+        $expenseRecord->update(['cost_per_product' => 25]);
+
+        $this->assertOutdatedFlags([true]);
+    }
+
+    public function test_deleted_expense_record_does_not_mark_calculation_as_outdated(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord();
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 50,
+        ]);
+
+        $this->delete(route('expense-records.destroy', $expenseRecord));
+
+        $this->assertOutdatedFlags([false]);
+    }
+
+    public function test_outdated_flag_reaches_products_page_and_dashboard(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord();
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 50,
+        ]);
+        $product->update(['cost_price' => 90]);
+        $this->withoutVite();
+
+        $this->get(route('products.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('products.0.is_price_outdated', true));
+        $this->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('metrics.outdated_prices', 1));
+    }
+
+    /**
+     * @param  list<bool>  $expected
+     */
+    private function assertOutdatedFlags(array $expected): void
+    {
+        $this->withoutVite();
+
+        $this->get(route('price-calculations.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('priceCalculations', fn ($calculations) => collect($calculations)->pluck('is_outdated')->all() === $expected));
     }
 
     /**

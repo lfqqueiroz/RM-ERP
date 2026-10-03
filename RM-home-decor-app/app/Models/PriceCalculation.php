@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\Money;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -18,6 +21,9 @@ use Illuminate\Support\Carbon;
  * @property string $final_price
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Product|null $product
+ * @property-read ExpenseRecord|null $expenseRecord
+ * @property-read bool $is_outdated
  */
 class PriceCalculation extends Model
 {
@@ -50,5 +56,47 @@ class PriceCalculation extends Model
             'profit_margin' => 'decimal:2',
             'final_price' => 'decimal:2',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Product, $this>
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * @return BelongsTo<ExpenseRecord, $this>
+     */
+    public function expenseRecord(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseRecord::class);
+    }
+
+    /**
+     * Indica se o custo do produto ou o custo da viagem mudou desde que o
+     * cálculo foi salvo. Produto ou registro excluídos não contam.
+     *
+     * Carregue `product` e `expenseRecord` antes (eager loading) ou passe o
+     * produto já carregado, para não gerar uma consulta por cálculo.
+     */
+    public function hasOutdatedCosts(?Product $product = null): bool
+    {
+        $product ??= $this->product;
+        $expenseRecord = $this->expenseRecord;
+
+        return ($product !== null
+                && Money::toCents($product->cost_price) !== Money::toCents($this->product_cost))
+            || ($expenseRecord !== null
+                && Money::toCents($expenseRecord->cost_per_product) !== Money::toCents($this->trip_cost_per_product));
+    }
+
+    /**
+     * @return Attribute<bool, never>
+     */
+    protected function isOutdated(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->hasOutdatedCosts());
     }
 }

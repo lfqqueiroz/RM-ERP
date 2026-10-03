@@ -24,8 +24,10 @@ class PriceCalculationController extends Controller
                 ->latest()
                 ->get(['id', 'description', 'cost_per_product', 'created_at']),
             'priceCalculations' => PriceCalculation::query()
+                ->with(['product:id,cost_price', 'expenseRecord:id,cost_per_product'])
                 ->latest()
-                ->get(),
+                ->get()
+                ->append('is_outdated'),
         ]);
     }
 

@@ -32,6 +32,14 @@ class DashboardController extends Controller
                 'without_price' => Product::query()
                     ->whereNull('price_calculation_id')
                     ->count(),
+                // Mesma regra de PriceCalculation::hasOutdatedCosts(), em SQL.
+                'outdated_prices' => Product::query()
+                    ->join('price_calculations', 'price_calculations.id', '=', 'products.price_calculation_id')
+                    ->leftJoin('expense_records', 'expense_records.id', '=', 'price_calculations.expense_record_id')
+                    ->where(fn ($query) => $query
+                        ->whereColumn('products.cost_price', '<>', 'price_calculations.product_cost')
+                        ->orWhereColumn('expense_records.cost_per_product', '<>', 'price_calculations.trip_cost_per_product'))
+                    ->count(),
             ],
             // Agrupa pelo produto (nome/SKU atuais); itens de produtos excluídos
             // (product_id nulo) caem no snapshot gravado no pedido.
