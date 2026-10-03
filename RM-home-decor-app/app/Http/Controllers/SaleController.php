@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaleStoreRequest;
+use App\Http\Requests\SaleUpdateRequest;
 use App\Models\PriceCalculation;
 use App\Models\Product;
 use App\Models\Sale;
@@ -52,76 +53,97 @@ class SaleController extends Controller
 
     public function store(SaleStoreRequest $request): RedirectResponse
     {
-        $this->saveSale($request);
+        DB::transaction(function () use ($request): void {
+            $sale = Sale::create([
+                'customer_name' => $request->validated('customer_name'),
+                'customer_phone' => $request->validated('customer_phone'),
+                'total_amount' => 0,
+            ]);
+            $totalCents = 0;
+
+            foreach ($request->items() as $item) {
+                $attributes = $this->pricedItem($item['product_id'], $item['price_calculation_id'], $item['quantity']);
+                $sale->items()->create($attributes);
+                $totalCents += Money::toCents($attributes['total_amount']);
+            }
+
+            $sale->update(['total_amount' => Money::fromCents($totalCents)]);
+        });
 
         $this->toast('Venda registrada com sucesso.');
 
         return back();
     }
 
-    public function update(SaleStoreRequest $request, Sale $sale): RedirectResponse
+    /**
+     * Itens existentes sem preço escolhido mantêm o que foi gravado (só a
+     * quantidade muda); com preço escolhido são repreçados; itens novos são
+     * criados e os ausentes, removidos. Nada aqui altera o estoque.
+     */
+    public function update(SaleUpdateRequest $request, Sale $sale): RedirectResponse
     {
-        $this->saveSale($request, $sale);
+        DB::transaction(function () use ($request, $sale): void {
+            $sale->update([
+                'customer_name' => $request->validated('customer_name'),
+                'customer_phone' => $request->validated('customer_phone'),
+            ]);
+            $storedItems = $sale->items()->get()->keyBy('id');
+            $keptItemIds = [];
+            $totalCents = 0;
+
+            foreach ($request->items() as $item) {
+                $saleItem = $item['id'] === null ? null : $storedItems->get($item['id']);
+
+                if ($saleItem !== null && $item['price_calculation_id'] === null) {
+                    $lineCents = Money::toCents($saleItem->unit_price) * $item['quantity'];
+                    $saleItem->update([
+                        'quantity' => $item['quantity'],
+                        'total_amount' => Money::fromCents($lineCents),
+                    ]);
+                } else {
+                    // O SaleUpdateRequest garante produto e preço salvo para itens repreçados ou novos.
+                    $attributes = $this->pricedItem(
+                        (int) $item['product_id'],
+                        (int) $item['price_calculation_id'],
+                        $item['quantity'],
+                    );
+                    $saleItem === null
+                        ? $saleItem = $sale->items()->create($attributes)
+                        : $saleItem->update($attributes);
+                    $lineCents = Money::toCents($attributes['total_amount']);
+                }
+
+                $keptItemIds[] = $saleItem->id;
+                $totalCents += $lineCents;
+            }
+
+            $sale->items()->whereKeyNot($keptItemIds)->delete();
+            $sale->update(['total_amount' => Money::fromCents($totalCents)]);
+        });
 
         $this->toast('Venda atualizada com sucesso.');
 
         return back();
     }
 
-    private function saveSale(SaleStoreRequest $request, ?Sale $sale = null): void
+    /**
+     * Item com o preço atual do cálculo e o snapshot atual do produto.
+     *
+     * @return array{product_id: int, price_calculation_id: int, product_name: string, product_sku: string, quantity: int, unit_price: string, total_amount: string}
+     */
+    private function pricedItem(int $productId, int $priceCalculationId, int $quantity): array
     {
-        $items = $request->items()
-            ->groupBy('product_id')
-            ->map(fn ($items) => [
-                'quantity' => $items->sum('quantity'),
-                'price_calculation_id' => $items->first()['price_calculation_id'],
-            ]);
+        $product = Product::findOrFail($productId);
+        $priceCalculation = PriceCalculation::findOrFail($priceCalculationId);
 
-        $products = Product::query()
-            ->whereKey($items->keys())
-            ->get()
-            ->keyBy('id');
-        $priceCalculations = PriceCalculation::query()
-            ->whereKey($items->pluck('price_calculation_id'))
-            ->get()
-            ->keyBy('id');
-
-        DB::transaction(function () use ($items, $products, $priceCalculations, $request, $sale): void {
-            if ($sale) {
-                $sale->update([
-                    'customer_name' => $request->validated('customer_name'),
-                    'customer_phone' => $request->validated('customer_phone'),
-                    'total_amount' => 0,
-                ]);
-                $sale->items()->delete();
-            } else {
-                $sale = Sale::create([
-                    'customer_name' => $request->validated('customer_name'),
-                    'customer_phone' => $request->validated('customer_phone'),
-                    'total_amount' => 0,
-                ]);
-            }
-            $totalAmountCents = 0;
-
-            foreach ($items as $productId => $item) {
-                $product = $products->get($productId);
-                $priceCalculation = $priceCalculations->get($item['price_calculation_id']);
-                $itemTotalCents = Money::toCents($priceCalculation->final_price) * $item['quantity'];
-
-                $sale->items()->create([
-                    'product_id' => $product->id,
-                    'price_calculation_id' => $priceCalculation->id,
-                    'product_name' => $product->name,
-                    'product_sku' => $product->sku,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $priceCalculation->final_price,
-                    'total_amount' => Money::fromCents($itemTotalCents),
-                ]);
-
-                $totalAmountCents += $itemTotalCents;
-            }
-
-            $sale->update(['total_amount' => Money::fromCents($totalAmountCents)]);
-        });
+        return [
+            'product_id' => $product->id,
+            'price_calculation_id' => $priceCalculation->id,
+            'product_name' => $product->name,
+            'product_sku' => $product->sku,
+            'quantity' => $quantity,
+            'unit_price' => $priceCalculation->final_price,
+            'total_amount' => Money::fromCents(Money::toCents($priceCalculation->final_price) * $quantity),
+        ];
     }
 }

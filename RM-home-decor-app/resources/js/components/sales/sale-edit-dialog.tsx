@@ -61,7 +61,9 @@ export function SaleEditDialog({
             items: sale.items.map((item) => ({
                 product_id: String(item.product_id ?? ''),
                 quantity: String(item.quantity),
-                price_calculation_id: String(item.price_calculation_id ?? ''),
+                // Vazio = manter o preço gravado; escolher um preço repreça o item.
+                price_calculation_id: '',
+                original: item,
             })),
         });
         // Recarrega o formulário só quando outro pedido é aberto.
@@ -75,6 +77,14 @@ export function SaleEditDialog({
             return;
         }
 
+        // Envia só o id do item gravado, não o snapshot usado pela tela.
+        form.transform((data) => ({
+            ...data,
+            items: data.items.map(({ original, ...item }) => ({
+                ...item,
+                id: original?.id ?? null,
+            })),
+        }));
         form.put(`/vendas/${sale.id}`, {
             preserveScroll: true,
             onSuccess: onClose,

@@ -52,3 +52,14 @@ Status de pedido (cancelado/entregue) e exclusão de pedidos.
 - Teste: produto repetido → erro de validação.
 - Teste: os ids dos itens mantidos não mudam.
 - Regra "pedido ≠ baixa de estoque" preservada (estoque inalterado em todos os testes).
+
+## Implementação (2026-10-03)
+
+Concluída.
+
+- `SaleUpdateRequest` (novo): `items.*.id` opcional; produto e preço obrigatórios só para itens novos; no `after()`: item precisa pertencer ao pedido, item mantido não pode trocar de produto sem escolher preço, preço escolhido precisa ser do produto, e produto repetido é erro (considerando o produto gravado dos itens mantidos). `items()` devolve lista tipada (`list<array{...}>`).
+- `SaleStoreRequest`: `distinct` em `items.*.product_id` — a junção silenciosa de linhas repetidas em `saveSale` foi removida.
+- `SaleController`: `store` cria cada item com o preço atual; `update` mantém (só quantidade), repreça ou cria cada item, remove os ausentes e recalcula o total em centavos — tudo em transação; ids dos itens mantidos preservados. Nenhuma linha mexe em estoque.
+- Frontend: itens existentes abrem com "**Preço do pedido: R$ X**" (opção vazia = manter); item com produto excluído mostra o snapshot em texto ("Produto excluído — o item mantém o que foi gravado"); o formulário envia só o `id` do item gravado (`form.transform`), não o snapshot.
+- `CLAUDE.md` atualizado (antes: "editar uma venda apaga e recria os itens").
+- Testes: `SaleEditTest` (9) cobre todos os critérios de aceite; 129 testes no total.
