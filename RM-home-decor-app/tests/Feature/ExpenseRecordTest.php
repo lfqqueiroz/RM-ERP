@@ -29,7 +29,7 @@ class ExpenseRecordTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('expense-records/index')
-                ->has('expenseRecords', 1));
+                ->has('expenseRecords.data', 1));
     }
 
     public function test_store_calculates_total_cost_and_cost_per_product(): void

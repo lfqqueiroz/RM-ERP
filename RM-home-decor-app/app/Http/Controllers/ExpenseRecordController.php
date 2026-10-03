@@ -4,17 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ExpenseRecordStoreRequest;
 use App\Models\ExpenseRecord;
+use App\Support\ListQuery;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ExpenseRecordController extends Controller
 {
-    public function index(): Response
+    /** Colunas pelas quais a listagem pode ser ordenada. */
+    private const SORTABLE = ['created_at', 'description', 'product_quantity', 'total_cost', 'cost_per_product'];
+
+    public function index(Request $request): Response|RedirectResponse
     {
+        $query = ListQuery::fromRequest($request, self::SORTABLE);
+        $expenseRecords = ExpenseRecord::query()
+            ->when($query->hasSearch(), fn ($builder) => $builder
+                ->where('description', 'like', $query->likePattern()))
+            ->orderBy($query->sort, $query->direction)
+            ->orderBy('id', $query->direction)
+            ->paginate(ListQuery::PER_PAGE, pageName: ListQuery::PAGE_NAME)
+            ->withQueryString();
+
+        if ($redirect = ListQuery::redirectIfPastLastPage($expenseRecords)) {
+            return $redirect;
+        }
+
         return Inertia::render('expense-records/index', [
-            'expenseRecords' => ExpenseRecord::query()->latest()->get(),
+            'expenseRecords' => $expenseRecords,
+            'filters' => $query->toArray(),
         ]);
     }
 

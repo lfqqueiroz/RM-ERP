@@ -34,3 +34,16 @@ A busca (`products`, `expense-records`) e a ordenação (`expense-records`) são
 - Testes de feature: 30 produtos → primeira página com 25 e `links` presentes; busca por SKU retorna só o produto; ordenação inválida → 422 ou ignorada com fallback (definir e testar).
 - Busca de pedidos por nome de produto funciona em SQLite e MySQL (usar `whereHas`, sem SQL específico de banco).
 - Nenhuma alteração de schema. Se a busca ficar lenta em produção, **propor** índices ao usuário (exige migration → autorização).
+
+## Implementação (2026-10-03)
+
+Concluída. Decisões:
+
+- `App\Support\ListQuery`: lê `busca`, `ordem`, `direcao` da URL; ordem/direção inválidas **caem no padrão** (sem 422), para URLs editadas à mão continuarem abrindo. Ordenação só por whitelist (`ExpenseRecordController::SORTABLE`).
+- Parâmetro de página em português: `?pagina=` (as URLs do sistema são em português), 25 por página, `withQueryString()`.
+- Página além da última (ex.: excluiu o último item da página) redireciona para a última página existente.
+- Listas de apoio dos selects continuam completas e enxutas, como **closures**: em recargas parciais (`only`) não são recalculadas no servidor (coberto em teste). Produtos ganhou a prop `productOptions` (todos os produtos) para o diálogo de pedido, já que `products` agora é só a página atual.
+- Busca no servidor com `LIKE`; no MySQL (`utf8mb4_unicode_ci`) ignora acentos e maiúsculas — validado com leitura no banco real. `%`/`_` digitados funcionam como curingas (valor sempre como parâmetro).
+- Vendas ganhou campo de busca (cliente, telefone ou produto dos itens, via `whereHas`).
+- Frontend: `Paginated<T>`, componente `Pagination` (resumo "1–25 de 71" + páginas), hook `useListSearch` (debounce de 300 ms), `visitList` (recarga parcial). A ordenação de Registros de gastos passou para o servidor; `sorting.ts` (ordenação no cliente) removido.
+- Índices: não criados (exigiria migration). Com os volumes atuais (71 produtos, 61 cálculos, 11 pedidos) não há necessidade; se a busca ficar lenta, propor índices ao usuário.

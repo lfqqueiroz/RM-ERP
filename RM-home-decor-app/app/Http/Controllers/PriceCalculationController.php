@@ -6,28 +6,45 @@ use App\Http\Requests\PriceCalculationStoreRequest;
 use App\Models\ExpenseRecord;
 use App\Models\PriceCalculation;
 use App\Models\Product;
+use App\Support\ListQuery;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PriceCalculationController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        $query = ListQuery::fromRequest($request);
+        $priceCalculations = PriceCalculation::query()
+            ->with(['product:id,cost_price', 'expenseRecord:id,cost_per_product'])
+            ->when($query->hasSearch(), fn ($builder) => $builder
+                ->where('product_name', 'like', $query->likePattern()))
+            ->latest()
+            ->orderByDesc('id')
+            ->paginate(ListQuery::PER_PAGE, pageName: ListQuery::PAGE_NAME)
+            ->withQueryString();
+
+        if ($redirect = ListQuery::redirectIfPastLastPage($priceCalculations)) {
+            return $redirect;
+        }
+
+        $priceCalculations->through(
+            fn (PriceCalculation $calculation) => $calculation->append('is_outdated'),
+        );
+
         return Inertia::render('price-calculations/index', [
-            'products' => Product::query()
+            'priceCalculations' => $priceCalculations,
+            'filters' => $query->toArray(),
+            'products' => fn () => Product::query()
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku', 'cost_price', 'sale_price']),
-            'expenseRecords' => ExpenseRecord::query()
+            'expenseRecords' => fn () => ExpenseRecord::query()
                 ->latest()
                 ->get(['id', 'description', 'cost_per_product', 'created_at']),
-            'priceCalculations' => PriceCalculation::query()
-                ->with(['product:id,cost_price', 'expenseRecord:id,cost_per_product'])
-                ->latest()
-                ->get()
-                ->append('is_outdated'),
         ]);
     }
 

@@ -6,25 +6,45 @@ use App\Http\Requests\SaleStoreRequest;
 use App\Models\PriceCalculation;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Support\ListQuery;
 use App\Support\Money;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SaleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        $query = ListQuery::fromRequest($request);
+        $sales = Sale::query()
+            ->with('items')
+            ->when($query->hasSearch(), fn (Builder $builder) => $builder->where(
+                fn (Builder $where) => $where
+                    ->where('customer_name', 'like', $query->likePattern())
+                    ->orWhere('customer_phone', 'like', $query->likePattern())
+                    ->orWhereHas('items', fn (Builder $items) => $items
+                        ->where('product_name', 'like', $query->likePattern())),
+            ))
+            ->latest()
+            ->orderByDesc('id')
+            ->paginate(ListQuery::PER_PAGE, pageName: ListQuery::PAGE_NAME)
+            ->withQueryString();
+
+        if ($redirect = ListQuery::redirectIfPastLastPage($sales)) {
+            return $redirect;
+        }
+
         return Inertia::render('sales/index', [
-            'sales' => Sale::query()
-                ->with('items')
-                ->latest()
-                ->get(),
-            'products' => Product::query()
+            'sales' => $sales,
+            'filters' => $query->toArray(),
+            'products' => fn () => Product::query()
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku']),
-            'priceCalculations' => PriceCalculation::query()
+            'priceCalculations' => fn () => PriceCalculation::query()
                 ->latest()
                 ->get(['id', 'product_id', 'final_price']),
         ]);

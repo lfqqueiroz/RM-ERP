@@ -5,10 +5,12 @@ import type { Sale } from '@/types';
 
 type Props = {
     sales: Sale[];
+    /** Mensagem quando a lista está vazia. */
+    emptyMessage: string;
     onEdit: (sale: Sale) => void;
 };
 
-export function SaleTable({ sales, onEdit }: Props) {
+export function SaleTable({ sales, emptyMessage, onEdit }: Props) {
     return (
         <div className="overflow-x-auto rounded-xl border">
             <table className="w-full text-sm">
@@ -29,7 +31,7 @@ export function SaleTable({ sales, onEdit }: Props) {
                                 colSpan={6}
                                 className="px-4 py-8 text-center text-muted-foreground"
                             >
-                                Nenhuma venda registrada.
+                                {emptyMessage}
                             </td>
                         </tr>
                     ) : (

@@ -261,7 +261,7 @@ class PriceCalculationTest extends TestCase
 
         $this->get(route('products.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('products.0.is_price_outdated', true));
+                ->where('products.data.0.is_price_outdated', true));
         $this->get(route('dashboard'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('metrics.outdated_prices', 1));
@@ -276,7 +276,7 @@ class PriceCalculationTest extends TestCase
 
         $this->get(route('price-calculations.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('priceCalculations', fn ($calculations) => collect($calculations)->pluck('is_outdated')->all() === $expected));
+                ->where('priceCalculations.data', fn ($calculations) => collect($calculations)->pluck('is_outdated')->all() === $expected));
     }
 
     /**

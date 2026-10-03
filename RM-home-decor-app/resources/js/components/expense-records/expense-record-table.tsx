@@ -4,7 +4,14 @@ import type { SortDirection } from '@/components/sortable-header';
 import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/money';
 import type { ExpenseRecord } from '@/types';
-import type { ExpenseRecordSortKey } from './sorting';
+
+/** Colunas ordenáveis (mesma whitelist de ExpenseRecordController::SORTABLE). */
+export type ExpenseRecordSortKey =
+    | 'created_at'
+    | 'description'
+    | 'product_quantity'
+    | 'total_cost'
+    | 'cost_per_product';
 
 type Props = {
     records: ExpenseRecord[];

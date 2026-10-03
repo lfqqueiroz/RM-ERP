@@ -2,6 +2,8 @@ import { Head, router } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import type { OrderItemProduct } from '@/components/orders/order-items-editor';
+import { Pagination } from '@/components/pagination';
 import { DeleteProductDialog } from '@/components/products/delete-product-dialog';
 import { OrderDialog } from '@/components/products/order-dialog';
 import { ProductCreateForm } from '@/components/products/product-create-form';
@@ -13,20 +15,33 @@ import type {
 } from '@/components/products/types';
 import { SearchInput } from '@/components/search-input';
 import { Button } from '@/components/ui/button';
-import { matchesSearch } from '@/lib/search';
+import { useListSearch } from '@/hooks/use-list-search';
+import type { ListFilters, Paginated } from '@/types';
 
 type Props = {
-    products: ProductRow[];
+    products: Paginated<ProductRow>;
+    filters: ListFilters;
+    /** Todos os produtos (lista enxuta), para o diálogo de pedido. */
+    productOptions: OrderItemProduct[];
     priceCalculations: ProductPriceOption[];
     defaultMinimumStock: number;
 };
 
+/** Props recarregadas ao buscar ou trocar de página. */
+const LIST_PROPS = ['products', 'filters'];
+
 export default function Products({
     products,
+    filters,
+    productOptions,
     priceCalculations,
     defaultMinimumStock,
 }: Props) {
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useListSearch(
+        '/produtos',
+        filters,
+        LIST_PROPS,
+    );
     const [editingProduct, setEditingProduct] = useState<ProductRow | null>(
         null,
     );
@@ -40,10 +55,6 @@ export default function Products({
     const [updatingPriceProductId, setUpdatingPriceProductId] = useState<
         number | null
     >(null);
-
-    const filteredProducts = products.filter((product) =>
-        matchesSearch(searchQuery, product.name, product.sku),
-    );
 
     /** Botão "Vender": baixa 1 unidade do estoque (a única baixa do sistema). */
     function sellOneUnit(product: ProductRow) {
@@ -111,8 +122,8 @@ export default function Products({
                                 Itens cadastrados
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                {filteredProducts.length}{' '}
-                                {filteredProducts.length === 1
+                                {products.total}{' '}
+                                {products.total === 1
                                     ? 'item encontrado'
                                     : 'itens encontrados'}
                             </p>
@@ -128,7 +139,7 @@ export default function Products({
                     </div>
 
                     <ProductTable
-                        products={filteredProducts}
+                        products={products.data}
                         priceCalculations={priceCalculations}
                         defaultMinimumStock={defaultMinimumStock}
                         sellingProductId={sellingProductId}
@@ -137,6 +148,12 @@ export default function Products({
                         onEdit={setEditingProduct}
                         onDelete={setDeletingProduct}
                         onSell={sellOneUnit}
+                    />
+
+                    <Pagination
+                        paginator={products}
+                        only={LIST_PROPS}
+                        itemLabel="produtos"
                     />
                 </section>
 
@@ -154,7 +171,7 @@ export default function Products({
                 <OrderDialog
                     open={isOrderOpen}
                     onClose={() => setIsOrderOpen(false)}
-                    products={products}
+                    products={productOptions}
                     priceCalculations={priceCalculations}
                 />
             </div>

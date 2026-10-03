@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Pagination } from '@/components/pagination';
 import { PriceCalculationForm } from '@/components/price-calculations/price-calculation-form';
 import { PriceCalculationTable } from '@/components/price-calculations/price-calculation-table';
 import type {
@@ -8,29 +9,35 @@ import type {
     PriceCalculationRow,
 } from '@/components/price-calculations/types';
 import { SearchInput } from '@/components/search-input';
+import { useListSearch } from '@/hooks/use-list-search';
 import { usePriceCalculationForm } from '@/hooks/use-price-calculation-form';
-import { matchesSearch } from '@/lib/search';
+import type { ListFilters, Paginated } from '@/types';
 
 type Props = {
     products: CalculationProduct[];
     expenseRecords: CalculationTrip[];
-    priceCalculations: PriceCalculationRow[];
+    priceCalculations: Paginated<PriceCalculationRow>;
+    filters: ListFilters;
 };
+
+/** Props recarregadas ao buscar ou trocar de página. */
+const LIST_PROPS = ['priceCalculations', 'filters'];
 
 export default function PriceCalculations({
     products,
     expenseRecords,
     priceCalculations,
+    filters,
 }: Props) {
     const form = usePriceCalculationForm(products, expenseRecords);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useListSearch(
+        '/calculos-de-preco',
+        filters,
+        LIST_PROPS,
+    );
     const [deletingCalculationId, setDeletingCalculationId] = useState<
         number | null
     >(null);
-
-    const filteredCalculations = priceCalculations.filter((calculation) =>
-        matchesSearch(searchQuery, calculation.product_name),
-    );
 
     function editCalculation(calculation: PriceCalculationRow) {
         form.edit(calculation);
@@ -103,8 +110,8 @@ export default function PriceCalculations({
                                 Preços salvos
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                {searchQuery.trim()
-                                    ? `${filteredCalculations.length} de ${priceCalculations.length} ${priceCalculations.length === 1 ? 'preço' : 'preços'}`
+                                {filters.busca
+                                    ? `${priceCalculations.total} ${priceCalculations.total === 1 ? 'preço encontrado' : 'preços encontrados'}`
                                     : 'Histórico dos preços calculados.'}
                             </p>
                         </div>
@@ -122,15 +129,21 @@ export default function PriceCalculations({
                     </div>
 
                     <PriceCalculationTable
-                        calculations={filteredCalculations}
+                        calculations={priceCalculations.data}
                         emptyMessage={
-                            priceCalculations.length === 0
-                                ? 'Nenhum preço salvo.'
-                                : 'Nenhum preço encontrado para a pesquisa.'
+                            filters.busca
+                                ? 'Nenhum preço encontrado para a pesquisa.'
+                                : 'Nenhum preço salvo.'
                         }
                         deletingCalculationId={deletingCalculationId}
                         onEdit={editCalculation}
                         onDelete={deleteCalculation}
+                    />
+
+                    <Pagination
+                        paginator={priceCalculations}
+                        only={LIST_PROPS}
+                        itemLabel="preços"
                     />
                 </section>
             </div>

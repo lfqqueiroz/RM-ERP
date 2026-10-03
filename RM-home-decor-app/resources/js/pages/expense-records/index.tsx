@@ -2,46 +2,53 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ExpenseRecordForm } from '@/components/expense-records/expense-record-form';
 import { ExpenseRecordTable } from '@/components/expense-records/expense-record-table';
-import { sortExpenseRecords } from '@/components/expense-records/sorting';
-import type { ExpenseRecordSortKey } from '@/components/expense-records/sorting';
+import type { ExpenseRecordSortKey } from '@/components/expense-records/expense-record-table';
+import { Pagination } from '@/components/pagination';
 import { SearchInput } from '@/components/search-input';
-import type { SortDirection } from '@/components/sortable-header';
 import { useExpenseRecordForm } from '@/hooks/use-expense-record-form';
-import { matchesSearch } from '@/lib/search';
-import type { ExpenseRecord } from '@/types';
+import { useListSearch } from '@/hooks/use-list-search';
+import { visitList } from '@/lib/list-query';
+import type { ExpenseRecord, ListFilters, Paginated } from '@/types';
 
 type Props = {
-    expenseRecords: ExpenseRecord[];
+    expenseRecords: Paginated<ExpenseRecord>;
+    filters: ListFilters;
 };
 
-export default function ExpenseRecords({ expenseRecords }: Props) {
+const LIST_URL = '/registros-de-gastos';
+
+/** Props recarregadas ao buscar, ordenar ou trocar de página. */
+const LIST_PROPS = ['expenseRecords', 'filters'];
+
+export default function ExpenseRecords({ expenseRecords, filters }: Props) {
     const formState = useExpenseRecordForm();
     const [deletingRecordId, setDeletingRecordId] = useState<number | null>(
         null,
     );
-    const [searchQuery, setSearchQuery] = useState('');
-    const [sortKey, setSortKey] = useState<ExpenseRecordSortKey>('created_at');
-    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-
-    const visibleRecords = sortExpenseRecords(
-        expenseRecords.filter((record) =>
-            matchesSearch(searchQuery, record.description),
-        ),
-        sortKey,
-        sortDirection,
+    const [searchQuery, setSearchQuery] = useListSearch(
+        LIST_URL,
+        filters,
+        LIST_PROPS,
+        { keepSort: true },
     );
+    const sortKey = filters.ordem as ExpenseRecordSortKey;
 
+    /** Mesma coluna inverte a direção; coluna nova começa crescente (data: decrescente). */
     function changeSort(nextSortKey: ExpenseRecordSortKey) {
-        if (nextSortKey === sortKey) {
-            setSortDirection((direction) =>
-                direction === 'asc' ? 'desc' : 'asc',
-            );
+        const direction =
+            nextSortKey === sortKey
+                ? filters.direcao === 'asc'
+                    ? 'desc'
+                    : 'asc'
+                : nextSortKey === 'created_at'
+                  ? 'desc'
+                  : 'asc';
 
-            return;
-        }
-
-        setSortKey(nextSortKey);
-        setSortDirection(nextSortKey === 'created_at' ? 'desc' : 'asc');
+        visitList(
+            LIST_URL,
+            { busca: searchQuery, ordem: nextSortKey, direcao: direction },
+            LIST_PROPS,
+        );
     }
 
     function editRecord(record: ExpenseRecord) {
@@ -58,7 +65,7 @@ export default function ExpenseRecords({ expenseRecords }: Props) {
         }
 
         setDeletingRecordId(record.id);
-        router.delete(`/registros-de-gastos/${record.id}`, {
+        router.delete(`${LIST_URL}/${record.id}`, {
             preserveScroll: true,
             onSuccess: () => {
                 if (formState.editingRecord?.id === record.id) {
@@ -93,8 +100,8 @@ export default function ExpenseRecords({ expenseRecords }: Props) {
                                 Registros salvos
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                {visibleRecords.length}{' '}
-                                {visibleRecords.length === 1
+                                {expenseRecords.total}{' '}
+                                {expenseRecords.total === 1
                                     ? 'registro encontrado'
                                     : 'registros encontrados'}
                             </p>
@@ -110,13 +117,19 @@ export default function ExpenseRecords({ expenseRecords }: Props) {
                     </div>
 
                     <ExpenseRecordTable
-                        records={visibleRecords}
+                        records={expenseRecords.data}
                         sortKey={sortKey}
-                        sortDirection={sortDirection}
+                        sortDirection={filters.direcao}
                         onSort={changeSort}
                         deletingRecordId={deletingRecordId}
                         onEdit={editRecord}
                         onDelete={deleteRecord}
+                    />
+
+                    <Pagination
+                        paginator={expenseRecords}
+                        only={LIST_PROPS}
+                        itemLabel="registros"
                     />
                 </section>
             </div>

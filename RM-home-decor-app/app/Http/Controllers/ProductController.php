@@ -7,25 +7,50 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Models\PriceCalculation;
 use App\Models\Product;
+use App\Support\ListQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        $query = ListQuery::fromRequest($request);
+        $products = Product::query()
+            ->with([
+                'priceCalculation:id,expense_record_id,product_cost,trip_cost_per_product',
+                'priceCalculation.expenseRecord:id,cost_per_product',
+            ])
+            ->when($query->hasSearch(), fn (Builder $builder) => $builder->where(
+                fn (Builder $where) => $where
+                    ->where('name', 'like', $query->likePattern())
+                    ->orWhere('sku', 'like', $query->likePattern()),
+            ))
+            ->latest()
+            ->orderByDesc('id')
+            ->paginate(ListQuery::PER_PAGE, pageName: ListQuery::PAGE_NAME)
+            ->withQueryString();
+
+        if ($redirect = ListQuery::redirectIfPastLastPage($products)) {
+            return $redirect;
+        }
+
+        $products->through(fn (Product $product) => $product
+            ->makeHidden('priceCalculation')
+            ->append('is_price_outdated'));
+
         return Inertia::render('products/index', [
-            'products' => Product::query()
-                ->with([
-                    'priceCalculation:id,expense_record_id,product_cost,trip_cost_per_product',
-                    'priceCalculation.expenseRecord:id,cost_per_product',
-                ])
-                ->latest()
-                ->get()
-                ->makeHidden('priceCalculation')
-                ->append('is_price_outdated'),
-            'priceCalculations' => PriceCalculation::query()
+            'products' => $products,
+            'filters' => $query->toArray(),
+            // Listas de apoio (selects): completas e enxutas; closures para não
+            // serem recalculadas em recargas parciais da listagem.
+            'productOptions' => fn () => Product::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'sku', 'stock']),
+            'priceCalculations' => fn () => PriceCalculation::query()
                 ->latest()
                 ->get(['id', 'product_id', 'product_name', 'final_price', 'created_at']),
             'defaultMinimumStock' => Product::DEFAULT_MINIMUM_STOCK,

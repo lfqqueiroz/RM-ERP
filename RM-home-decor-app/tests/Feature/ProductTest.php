@@ -32,7 +32,7 @@ class ProductTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('products/index')
-                ->has('products', 1)
+                ->has('products.data', 1)
                 ->has('priceCalculations', 1));
     }
 
