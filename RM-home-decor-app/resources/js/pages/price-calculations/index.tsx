@@ -90,8 +90,16 @@ export default function PriceCalculations({
     const finalPrice = isManualPrice
         ? manualPrice
         : baseCost * (1 + margin / 100);
-    const resultingMargin =
-        isManualPrice && baseCost > 0 ? (manualPrice / baseCost - 1) * 100 : 0;
+    // Markup: quanto o preço acrescenta sobre o custo base.
+    // Margem: quanto do preço de venda é lucro. 30% de markup = 23,08% de margem.
+    const markupPercent =
+        baseCost > 0 && finalPrice > 0
+            ? (finalPrice / baseCost - 1) * 100
+            : null;
+    const marginPercent =
+        finalPrice > 0 && baseCost > 0
+            ? ((finalPrice - baseCost) / finalPrice) * 100
+            : null;
     const hasPricingValue = isManualPrice
         ? manualFinalPrice !== ''
         : profitMargin !== '';
@@ -195,8 +203,8 @@ export default function PriceCalculations({
                     </h1>
                     <p className="text-muted-foreground">
                         Defina o preço de venda com base no custo do produto, na
-                        viagem e na margem de lucro desejada — ou informe o
-                        valor final manualmente.
+                        viagem e no markup desejado — ou informe o valor final
+                        manualmente.
                     </p>
                 </div>
 
@@ -251,7 +259,7 @@ export default function PriceCalculations({
                                     value="margin"
                                     className="flex-1"
                                 >
-                                    Porcentagem (%)
+                                    Markup (%)
                                 </ToggleGroupItem>
                                 <ToggleGroupItem
                                     value="manual"
@@ -284,7 +292,7 @@ export default function PriceCalculations({
                         ) : (
                             <>
                                 <Label htmlFor="profit-margin">
-                                    Margem de lucro desejada (%)
+                                    Markup sobre o custo (%)
                                 </Label>
                                 <Input
                                     id="profit-margin"
@@ -296,12 +304,20 @@ export default function PriceCalculations({
                                         setProfitMargin(event.target.value)
                                     }
                                     placeholder="Ex.: 30"
+                                    aria-describedby="profit-margin-hint"
                                 />
+                                <p
+                                    id="profit-margin-hint"
+                                    className="text-xs text-muted-foreground"
+                                >
+                                    Percentual acrescido ao custo base. Ex.: 30%
+                                    sobre R$ 100 = R$ 130.
+                                </p>
                             </>
                         )}
                     </div>
 
-                    <div className="grid gap-4 rounded-lg bg-muted p-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 rounded-lg bg-muted p-4 sm:grid-cols-2 lg:grid-cols-3">
                         <Summary label="Preço de custo" value={productCost} />
                         <Summary
                             label="Valor da viagem por produto"
@@ -313,33 +329,27 @@ export default function PriceCalculations({
                             value={finalPrice}
                             strong
                         />
+                        <PercentSummary
+                            label="Markup sobre o custo"
+                            value={markupPercent}
+                        />
+                        <PercentSummary
+                            label="Margem sobre a venda"
+                            value={marginPercent}
+                        />
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-sm text-muted-foreground">
                             {isManualPrice ? (
                                 <>
-                                    Preço final informado manualmente, sem
-                                    aplicar margem sobre o custo base.
-                                    {manualFinalPrice !== '' &&
-                                        baseCost > 0 && (
-                                            <>
-                                                {' '}
-                                                Margem resultante:{' '}
-                                                {resultingMargin.toLocaleString(
-                                                    'pt-BR',
-                                                    {
-                                                        maximumFractionDigits: 2,
-                                                    },
-                                                )}
-                                                %.
-                                            </>
-                                        )}
+                                    Preço final informado manualmente; markup e
+                                    margem acima são calculados a partir dele.
                                 </>
                             ) : (
                                 <>
                                     Fórmula: (preço de custo + valor por produto
-                                    da viagem) × (1 + margem de lucro ÷ 100).
+                                    da viagem) × (1 + markup ÷ 100).
                                 </>
                             )}
                         </p>
@@ -448,7 +458,7 @@ export default function PriceCalculations({
                                         Custo da viagem
                                     </th>
                                     <th className="px-4 py-3 text-right">
-                                        Margem
+                                        Markup
                                     </th>
                                     <th className="px-4 py-3 text-right">
                                         Preço final
@@ -576,6 +586,25 @@ export default function PriceCalculations({
                 </section>
             </div>
         </>
+    );
+}
+
+function PercentSummary({
+    label,
+    value,
+}: {
+    label: string;
+    value: number | null;
+}) {
+    return (
+        <div>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className="text-lg">
+                {value === null
+                    ? '—'
+                    : `${value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`}
+            </p>
+        </div>
     );
 }
 

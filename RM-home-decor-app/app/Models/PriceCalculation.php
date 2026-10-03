@@ -21,6 +21,11 @@ use Illuminate\Support\Carbon;
  */
 class PriceCalculation extends Model
 {
+    /**
+     * Preço por percentual sobre o custo base. Apesar do nome (mantido para
+     * não exigir migration), `profit_margin` guarda um markup sobre o custo,
+     * não a margem sobre a venda: final = base × (1 + profit_margin / 100).
+     */
     public const PRICING_MODE_MARGIN = 'margin';
 
     public const PRICING_MODE_MANUAL = 'manual';

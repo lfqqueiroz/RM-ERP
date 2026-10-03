@@ -158,6 +158,14 @@ return [
     'uppercase'              => 'O campo :attribute deve estar em maiúsculas.',
     'url'                    => 'O formato de URL indicado para o campo :attribute é inválido.',
     'uuid'                   => ':Attribute deve ser um UUID válido.',
+    'custom'                 => [
+        'final_price'   => [
+            'required_if' => 'Informe o preço final.',
+        ],
+        'profit_margin' => [
+            'required_if' => 'Informe o markup.',
+        ],
+    ],
     'attributes'             => [
         'address'                  => 'endereço',
         'affiliate_url'            => 'URL de afiliado',
@@ -303,7 +311,7 @@ return [
         'price_calculation_id'       => 'preço salvo',
         'pricing_mode'               => 'forma de cálculo do preço',
         'product_quantity'           => 'quantidade de produtos',
-        'profit_margin'              => 'margem de lucro',
+        'profit_margin'              => 'markup',
         'sku'                        => 'código/SKU',
         'stock'                      => 'estoque',
         'tolls'                      => 'pedágios',

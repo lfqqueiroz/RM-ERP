@@ -109,7 +109,7 @@ class PriceCalculationTest extends TestCase
             'pricing_mode' => 'manual',
         ]);
 
-        $response->assertSessionHasErrors('final_price');
+        $response->assertSessionHasErrors(['final_price' => 'Informe o preço final.']);
         $this->assertDatabaseCount('price_calculations', 0);
     }
 
@@ -123,7 +123,7 @@ class PriceCalculationTest extends TestCase
             'pricing_mode' => 'margin',
         ]);
 
-        $response->assertSessionHasErrors('profit_margin');
+        $response->assertSessionHasErrors(['profit_margin' => 'Informe o markup.']);
         $this->assertDatabaseCount('price_calculations', 0);
     }
 

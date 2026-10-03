@@ -21,3 +21,13 @@ A "Margem resultante" do modo manual (`index.tsx:85-86`, `(manual / base − 1) 
 
 - Nenhuma mudança em backend além de comentário/tradução.
 - Com base R$ 100 e 30%: tela mostra final R$ 130,00, markup 30% e margem 23,08%.
+
+## Implementação (2026-10-02)
+
+Concluída. Além do previsto:
+
+- O toggle de modo passou de "Porcentagem (%)" para "Markup (%)".
+- O resumo exibe markup e margem nos **dois** modos (antes só o manual mostrava a "margem resultante"); grade de 3 colunas.
+- Mensagens próprias em `lang/pt_BR/validation.php` (`custom`) para `profit_margin`/`final_price` obrigatórios — a mensagem genérica diria "...quando o valor de forma de cálculo do preço é igual a margin".
+
+Achado fora do escopo: a tela de Cálculo de preço não exibe erros de validação (usa `router.post` sem tratar `errors`). Hoje é mitigado pelo botão desabilitado até os campos estarem preenchidos.
