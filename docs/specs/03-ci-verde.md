@@ -31,3 +31,7 @@ Qualquer mudança de comportamento. O diff deve ser neutro para os testes existe
 
 - `composer lint:check` e `composer types:check` passam.
 - Os 47 testes atuais continuam passando sem alteração de asserts.
+
+## Implementação (2026-09-29)
+
+Concluída sem mudança de comportamento: Pint aplicado, `findOrFail` com `$request->integer()`, `SaleStoreRequest::items()` tipado e PHPDoc de tipos nos Form Requests, models e relações. Os 47 testes da época passaram sem alteração de asserts.
