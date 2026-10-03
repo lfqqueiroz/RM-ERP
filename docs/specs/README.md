@@ -11,7 +11,7 @@ Specs derivadas da revisão técnica de 2026-09-29. A numeração segue a revis�
 
 ## Status
 
-**Todas as specs concluídas** (2026-10-03). CI verde no GitHub e telas conferidas pelo usuário. Cada spec tem, no fim do arquivo, uma seção **Implementação** com as decisões e diferenças em relação ao plano.
+**Specs 02–12 concluídas** (2026-10-03); specs 13–16 (segunda revisão) em aberto. CI verde no GitHub e telas conferidas pelo usuário. Cada spec tem, no fim do arquivo, uma seção **Implementação** com as decisões e diferenças em relação ao plano.
 
 | Ordem | Spec | Tema | Risco | Status | Commit(s) |
 |---|---|---|---|---|---|
@@ -25,6 +25,15 @@ Specs derivadas da revisão técnica de 2026-09-29. A numeração segue a revis�
 | 8 | [12 — Ajustes menores](12-ajustes-menores.md) | Relações, validação, rotas | Médio (URLs) | ✅ 2026-10-02 | `1b8b1c3` |
 | 9 | [10 — Refatoração do frontend](10-refatoracao-frontend.md) | Tipos, `money`, componentes | Médio | ✅ 2026-10-03 | `b92496b` … `15c1869` (5) |
 | 10 | [09 — Paginação](09-paginacao.md) | Listagens paginadas | Médio | ✅ 2026-10-03 | `cf70cd3` |
+
+### Segunda revisão (2026-10-03)
+
+| Ordem | Spec | Tema | Risco | Status |
+|---|---|---|---|---|
+| 11 | [13 — Avisos de sucesso](13-avisos-de-sucesso.md) | Bug: toasts de sucesso nunca aparecem | Baixo | ⏳ Aberta |
+| 12 | [14 — Edição de pedidos](14-edicao-de-pedidos.md) | Não repreçar itens ao editar; pedidos com produto excluído | Médio | ⏳ Aberta |
+| 13 | [15 — Backup do banco](15-backup-do-banco.md) | `mysqldump` agendado + restauração documentada | Baixo | ⏳ Aberta |
+| 14 | [16 — Dependabot](16-dependabot.md) | Monitorar Composer e npm | Baixo | ⏳ Aberta |
 
 ### Fora das specs
 
