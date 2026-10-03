@@ -37,7 +37,6 @@ Specs derivadas da revisão técnica de 2026-09-29. A numeração segue a revis�
 
 ### Pendências conhecidas
 
-- `node_modules` local ainda com as versões antigas de `brace-expansion`, `js-yaml` e `nanoid` (só ferramentas de build/lint) até a próxima reinstalação; o `package-lock.json` já está corrigido e o CI instala as versões novas.
 - Índices de busca no banco não foram criados (exigiria migration). Propor ao usuário se as buscas ficarem lentas.
 
 ## Ordem de execução
