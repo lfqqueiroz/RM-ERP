@@ -298,7 +298,8 @@ class ProductTest extends TestCase
 
         $response = $this->post(route('products.sell', $product));
 
-        $response->assertSessionHasErrors('sale');
+        $response->assertInertiaFlash('toast.type', 'error');
+        $response->assertInertiaFlash('toast.message', 'O produto Mesa lateral está com o estoque vazio.');
         $this->assertDatabaseHas('products', ['id' => $product->id, 'stock' => 0]);
     }
 

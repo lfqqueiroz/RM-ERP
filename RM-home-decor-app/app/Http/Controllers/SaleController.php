@@ -54,14 +54,18 @@ class SaleController extends Controller
     {
         $this->saveSale($request);
 
-        return back()->with('success', 'Venda registrada com sucesso.');
+        $this->toast('Venda registrada com sucesso.');
+
+        return back();
     }
 
     public function update(SaleStoreRequest $request, Sale $sale): RedirectResponse
     {
         $this->saveSale($request, $sale);
 
-        return back()->with('success', 'Venda atualizada com sucesso.');
+        $this->toast('Venda atualizada com sucesso.');
+
+        return back();
     }
 
     private function saveSale(SaleStoreRequest $request, ?Sale $sale = null): void

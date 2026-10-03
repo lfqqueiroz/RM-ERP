@@ -52,14 +52,18 @@ class PriceCalculationController extends Controller
     {
         $this->saveCalculation($request);
 
-        return back()->with('success', 'Preço calculado e salvo com sucesso.');
+        $this->toast('Preço calculado e salvo com sucesso.');
+
+        return back();
     }
 
     public function update(PriceCalculationStoreRequest $request, PriceCalculation $priceCalculation): RedirectResponse
     {
         $this->saveCalculation($request, $priceCalculation);
 
-        return back()->with('success', 'Preço salvo atualizado com sucesso.');
+        $this->toast('Preço salvo atualizado com sucesso.');
+
+        return back();
     }
 
     public function destroy(PriceCalculation $priceCalculation): RedirectResponse
@@ -70,7 +74,9 @@ class PriceCalculationController extends Controller
             $priceCalculation->delete();
         });
 
-        return back()->with('success', 'Preço salvo excluído com sucesso.');
+        $this->toast('Preço salvo excluído com sucesso.');
+
+        return back();
     }
 
     private function saveCalculation(

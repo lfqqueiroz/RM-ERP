@@ -61,21 +61,27 @@ class ProductController extends Controller
     {
         Product::create($request->validated());
 
-        return back()->with('success', 'Produto cadastrado com sucesso');
+        $this->toast('Produto cadastrado com sucesso.');
+
+        return back();
     }
 
     public function update(ProductUpdateRequest $request, Product $product): RedirectResponse
     {
         $product->update($request->validated());
 
-        return back()->with('success', 'Produto atualizado com sucesso.');
+        $this->toast('Produto atualizado com sucesso.');
+
+        return back();
     }
 
     public function destroy(Product $product): RedirectResponse
     {
         $product->delete();
 
-        return back()->with('success', 'Produto excluído com sucesso.');
+        $this->toast('Produto excluído com sucesso.');
+
+        return back();
     }
 
     public function updatePriceCalculation(ProductPriceCalculationUpdateRequest $request, Product $product): RedirectResponse
@@ -89,7 +95,9 @@ class ProductController extends Controller
                 'sale_price' => 0,
             ]);
 
-            return back()->with('success', 'Preço salvo removido com sucesso.');
+            $this->toast('Preço salvo removido com sucesso.');
+
+            return back();
         }
 
         // O Form Request já garante que o cálculo é deste produto.
@@ -100,7 +108,9 @@ class ProductController extends Controller
             'sale_price' => $priceCalculation->final_price,
         ]);
 
-        return back()->with('success', 'Preço salvo selecionado com sucesso.');
+        $this->toast('Preço salvo selecionado com sucesso.');
+
+        return back();
     }
 
     public function sell(Product $product): RedirectResponse
@@ -111,11 +121,13 @@ class ProductController extends Controller
             ->decrement('stock');
 
         if ($sold === 0) {
-            return back()->withErrors([
-                'sale' => "O produto {$product->name} está com o estoque vazio.",
-            ]);
+            $this->toast("O produto {$product->name} está com o estoque vazio.", 'error');
+
+            return back();
         }
 
-        return back()->with('success', 'Venda registrada com sucesso.');
+        $this->toast('Venda registrada com sucesso.');
+
+        return back();
     }
 }

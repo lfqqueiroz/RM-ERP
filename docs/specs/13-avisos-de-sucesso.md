@@ -39,3 +39,12 @@ Mensagens de erro de validação de campos (continuam nos formulários, como hoj
 - Teste: Vender com estoque 0 → `toast.type = error`; estoque continua 0.
 - `grep -rn "with('success'" app/Http/Controllers` vazio.
 - Conferência manual: cadastrar um produto mostra o aviso verde no canto da tela.
+
+## Implementação (2026-10-03)
+
+Concluída.
+
+- `Controller::toast($message, $type = 'success')` com `Inertia::flash('toast', ...)`; as **14** ocorrências de `back()->with('success', ...)` trocadas (a contagem "15" acima estava errada: 6 em Produtos, 3 em Cálculo de preço, 2 em Vendas, 3 em Registros de gastos). Ponto final padronizado.
+- Estoque vazio no botão Vender: toast de erro em vez de `withErrors(['sale' => ...])`.
+- Frontend sem mudanças.
+- Testes: `FlashToastTest` cobre as 14 ações e garante que erro de validação não gera toast de sucesso; `ProductTest` passa a verificar o toast de erro do estoque vazio. Sondagem ponta a ponta: a página seguinte ao cadastro recebe `flash.toast` (antes `null`). 120 testes.

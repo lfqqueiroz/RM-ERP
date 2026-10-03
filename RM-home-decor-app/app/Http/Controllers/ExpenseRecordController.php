@@ -41,21 +41,27 @@ class ExpenseRecordController extends Controller
     {
         ExpenseRecord::create($this->recordData($request));
 
-        return back()->with('success', 'Registro de gastos salvo com sucesso.');
+        $this->toast('Registro de gastos salvo com sucesso.');
+
+        return back();
     }
 
     public function update(ExpenseRecordStoreRequest $request, ExpenseRecord $expenseRecord): RedirectResponse
     {
         $expenseRecord->update($this->recordData($request));
 
-        return back()->with('success', 'Registro de gastos atualizado com sucesso.');
+        $this->toast('Registro de gastos atualizado com sucesso.');
+
+        return back();
     }
 
     public function destroy(ExpenseRecord $expenseRecord): RedirectResponse
     {
         $expenseRecord->delete();
 
-        return back()->with('success', 'Registro de gastos excluído com sucesso.');
+        $this->toast('Registro de gastos excluído com sucesso.');
+
+        return back();
     }
 
     /**
