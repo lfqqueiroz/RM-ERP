@@ -9,6 +9,7 @@ import {
     TrendingUp,
     Wallet,
 } from 'lucide-react';
+import { formatMoney } from '@/lib/money';
 import { dashboard } from '@/routes';
 
 type Metrics = {
@@ -58,11 +59,6 @@ type Props = {
     } | null;
 };
 
-const money = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-});
-
 export default function Dashboard({
     metrics,
     topProducts,
@@ -96,19 +92,19 @@ export default function Dashboard({
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <MetricCard
                         label="Faturamento total"
-                        value={money.format(Number(metrics.total_revenue))}
+                        value={formatMoney(metrics.total_revenue)}
                         description={`${metrics.total_sales} venda(s) registrada(s)`}
                         icon={DollarSign}
                     />
                     <MetricCard
                         label="Faturamento do mês"
-                        value={money.format(Number(metrics.monthly_revenue))}
+                        value={formatMoney(metrics.monthly_revenue)}
                         description="Vendas confirmadas neste mês"
                         icon={TrendingUp}
                     />
                     <MetricCard
                         label="Capital em estoque"
-                        value={money.format(Number(metrics.inventory_cost))}
+                        value={formatMoney(metrics.inventory_cost)}
                         description={`${metrics.stock_units} unidade(s) disponíveis`}
                         icon={Wallet}
                     />
@@ -156,10 +152,8 @@ export default function Dashboard({
                                             </span>
                                             <span className="text-muted-foreground">
                                                 {product.quantity_sold} un. ·{' '}
-                                                {money.format(
-                                                    Number(
-                                                        product.total_amount,
-                                                    ),
+                                                {formatMoney(
+                                                    product.total_amount,
                                                 )}
                                             </span>
                                         </div>
@@ -263,9 +257,7 @@ export default function Dashboard({
                                         </div>
                                         <div className="text-right">
                                             <p className="font-medium">
-                                                {money.format(
-                                                    Number(sale.total_amount),
-                                                )}
+                                                {formatMoney(sale.total_amount)}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {new Date(
@@ -293,10 +285,8 @@ export default function Dashboard({
                                     Valor adicional por produto
                                 </p>
                                 <p className="mt-3 text-2xl font-semibold">
-                                    {money.format(
-                                        Number(
-                                            latestExpenseRecord.cost_per_product,
-                                        ),
+                                    {formatMoney(
+                                        latestExpenseRecord.cost_per_product,
                                     )}
                                 </p>
                                 <Link

@@ -2,6 +2,8 @@ import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
+import { formatMoney } from '@/lib/money';
+import { matchesSearch } from '@/lib/search';
 import { cn } from '@/lib/utils';
 
 export type SearchableProduct = {
@@ -18,11 +20,6 @@ type Props = {
     onChange: (productId: string) => void;
     placeholder?: string;
 };
-
-const money = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-});
 
 export function ProductSearchSelect({
     id,
@@ -41,24 +38,12 @@ export function ProductSearchSelect({
     const selectedLabel = selectedProduct
         ? `${selectedProduct.name} (${selectedProduct.sku})`
         : '';
-    const normalizedSearch = search.trim().toLocaleLowerCase('pt-BR');
     const filteredProducts = useMemo(
         () =>
-            products.filter((product) => {
-                if (!normalizedSearch) {
-                    return true;
-                }
-
-                return (
-                    product.name
-                        .toLocaleLowerCase('pt-BR')
-                        .includes(normalizedSearch) ||
-                    product.sku
-                        .toLocaleLowerCase('pt-BR')
-                        .includes(normalizedSearch)
-                );
-            }),
-        [normalizedSearch, products],
+            products.filter((product) =>
+                matchesSearch(search, product.name, product.sku),
+            ),
+        [search, products],
     );
 
     function openList() {
@@ -193,9 +178,7 @@ export function ProductSearchSelect({
                                     <span>{product.name}</span>
                                     <span className="text-xs text-muted-foreground">
                                         {product.sku} ·{' '}
-                                        {money.format(
-                                            Number(product.cost_price),
-                                        )}
+                                        {formatMoney(product.cost_price)}
                                     </span>
                                 </button>
                             </li>
