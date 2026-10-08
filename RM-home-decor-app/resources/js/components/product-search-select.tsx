@@ -69,6 +69,28 @@ export function ProductSearchSelect<T extends SearchableProduct>({
             ?.scrollIntoView({ block: 'nearest' });
     }, [isOpen, highlightedIndex]);
 
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        // Dentro de um Dialog, o Radix escuta o Esc na captura do `document`
+        // e fecharia o modal; a captura no `window` vem antes e fecha só a lista.
+        function handleEscape(event: globalThis.KeyboardEvent) {
+            if (event.key === 'Escape') {
+                event.stopPropagation();
+                closeList();
+            }
+        }
+
+        window.addEventListener('keydown', handleEscape, { capture: true });
+
+        return () =>
+            window.removeEventListener('keydown', handleEscape, {
+                capture: true,
+            });
+    }, [isOpen]);
+
     function openList() {
         const rect = containerRef.current?.getBoundingClientRect();
         const spaceBelow = rect ? window.innerHeight - rect.bottom : Infinity;
@@ -133,10 +155,6 @@ export function ProductSearchSelect<T extends SearchableProduct>({
             }
 
             return;
-        }
-
-        if (event.key === 'Escape') {
-            closeList();
         }
     }
 
