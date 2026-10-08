@@ -101,7 +101,7 @@ export function SaleEditDialog({
                 }
             }}
         >
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <form onSubmit={submit} className="grid gap-6">
                     <DialogHeader>
                         <DialogTitle>Editar registro de venda</DialogTitle>

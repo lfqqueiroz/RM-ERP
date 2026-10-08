@@ -69,7 +69,7 @@ export function OrderDialog({
                 }
             }}
         >
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                 <form className="grid gap-6" onSubmit={submit}>
                     <DialogHeader>
                         <DialogTitle>Criar pedido</DialogTitle>

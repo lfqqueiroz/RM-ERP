@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { PriceCalculationForm as FormState } from '@/hooks/use-price-calculation-form';
+import { formatMoney } from '@/lib/money';
 import type { PricingMode } from '@/types';
 import { PriceCalculationSummary } from './price-calculation-summary';
 import type { CalculationProduct, CalculationTrip } from './types';
@@ -30,6 +31,9 @@ export function PriceCalculationForm({
                         products={products}
                         value={form.productId}
                         onChange={form.setProductId}
+                        describe={(product) =>
+                            `${product.sku} · ${formatMoney(product.cost_price)}`
+                        }
                     />
                     <FieldError message={form.errors.product_id} />
                 </div>

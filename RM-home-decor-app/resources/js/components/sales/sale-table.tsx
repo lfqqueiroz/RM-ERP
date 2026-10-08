@@ -56,6 +56,10 @@ export function SaleTable({ sales, emptyMessage, onEdit }: Props) {
                                                 {item.product_name}{' '}
                                                 <span className="text-muted-foreground">
                                                     ({item.product_sku})
+                                                </span>{' '}
+                                                — {formatMoney(item.unit_price)}{' '}
+                                                <span className="text-muted-foreground">
+                                                    /un.
                                                 </span>
                                             </li>
                                         ))}

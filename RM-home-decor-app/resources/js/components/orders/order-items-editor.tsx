@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { ProductSearchSelect } from '@/components/product-search-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,14 +113,12 @@ export function OrderItemsEditor({
         <div
             key={index}
             className={cn(
-                'grid gap-3 rounded-lg border sm:items-end',
-                size === 'compact'
-                    ? 'p-3 sm:grid-cols-[1fr_10rem_7rem_auto]'
-                    : 'p-4 sm:grid-cols-[1fr_12rem_9rem_auto]',
+                'grid gap-3 rounded-lg border sm:grid-cols-[1fr_8rem_auto] sm:items-end',
+                size === 'compact' ? 'p-3' : 'p-4',
             )}
         >
             {item.original && item.original.product_id === null ? (
-                <div className="grid gap-2">
+                <div className="grid gap-2 sm:col-span-2">
                     <Label>Produto</Label>
                     <p className="flex min-h-9 flex-col justify-center text-sm">
                         <span>
@@ -132,37 +131,31 @@ export function OrderItemsEditor({
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-2">
+                <div className="grid gap-2 sm:col-span-2">
                     <Label htmlFor={`${idPrefix}-product-${index}`}>
                         Produto
                     </Label>
-                    <select
+                    <ProductSearchSelect
                         id={`${idPrefix}-product-${index}`}
                         required
+                        products={products}
                         value={item.product_id}
-                        onChange={(event) =>
-                            updateItem(index, 'product_id', event.target.value)
+                        onChange={(productId) =>
+                            updateItem(index, 'product_id', productId)
                         }
-                        className={selectClassName}
-                    >
-                        <option value="">Selecione um produto</option>
-                        {products.map((product) => (
-                            <option
-                                key={product.id}
-                                value={product.id}
-                                disabled={items.some(
-                                    (otherItem, otherIndex) =>
-                                        otherIndex !== index &&
-                                        Number(otherItem.product_id) ===
-                                            product.id,
-                                )}
-                            >
-                                {product.name} ({product.sku})
-                                {product.stock !== undefined &&
-                                    ` — ${product.stock} em estoque`}
-                            </option>
-                        ))}
-                    </select>
+                        describe={(product) =>
+                            product.stock !== undefined
+                                ? `${product.sku} · ${product.stock} em estoque`
+                                : product.sku
+                        }
+                        isDisabled={(product) =>
+                            items.some(
+                                (otherItem, otherIndex) =>
+                                    otherIndex !== index &&
+                                    Number(otherItem.product_id) === product.id,
+                            )
+                        }
+                    />
                 </div>
             )}
 
@@ -219,6 +212,7 @@ export function OrderItemsEditor({
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="justify-self-end sm:col-start-3 sm:row-start-1"
                 disabled={items.length === 1}
                 onClick={() => removeItem(index)}
                 aria-label="Remover produto do pedido"
@@ -229,7 +223,7 @@ export function OrderItemsEditor({
             {itemErrors(errors, index).map((message) => (
                 <p
                     key={message}
-                    className="text-sm text-destructive sm:col-span-4"
+                    className="text-sm text-destructive sm:col-span-3"
                 >
                     {message}
                 </p>
