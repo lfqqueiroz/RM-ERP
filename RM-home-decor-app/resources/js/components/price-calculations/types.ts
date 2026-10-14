@@ -15,7 +15,7 @@ export type CalculationTrip = Pick<
 export type PriceCalculationRow = PriceCalculation & {
     /** O custo do produto ou da viagem mudou desde que o cálculo foi salvo. */
     is_outdated: boolean;
-    product: Pick<Product, 'id' | 'cost_price'> | null;
+    product: Pick<Product, 'id' | 'cost_price' | 'stock'> | null;
     expense_record: Pick<ExpenseRecord, 'id' | 'cost_per_product'> | null;
 };
 

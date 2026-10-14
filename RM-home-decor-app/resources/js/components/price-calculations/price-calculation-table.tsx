@@ -73,6 +73,16 @@ export function PriceCalculationTable({
                                                 Custo alterado
                                             </Badge>
                                         )}
+                                        {calculation.product &&
+                                            calculation.product.stock <= 0 && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-destructive/50 text-destructive"
+                                                    title="O produto não tem nenhuma unidade em estoque."
+                                                >
+                                                    Sem estoque
+                                                </Badge>
+                                            )}
                                     </div>
                                 </td>
                                 <td className="px-4 py-3">

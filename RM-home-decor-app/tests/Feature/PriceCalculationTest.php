@@ -267,6 +267,23 @@ class PriceCalculationTest extends TestCase
                 ->where('metrics.outdated_prices', 1));
     }
 
+    public function test_index_exposes_current_product_stock(): void
+    {
+        [$product, $expenseRecord] = $this->createProductAndExpenseRecord();
+        $this->post(route('price-calculations.store'), [
+            'product_id' => $product->id,
+            'expense_record_id' => $expenseRecord->id,
+            'pricing_mode' => 'margin',
+            'profit_margin' => 50,
+        ]);
+        $product->update(['stock' => 0]);
+        $this->withoutVite();
+
+        $this->get(route('price-calculations.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('priceCalculations.data.0.product.stock', 0));
+    }
+
     /**
      * @param  list<bool>  $expected
      */

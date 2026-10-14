@@ -20,7 +20,7 @@ class PriceCalculationController extends Controller
     {
         $query = ListQuery::fromRequest($request);
         $priceCalculations = PriceCalculation::query()
-            ->with(['product:id,cost_price', 'expenseRecord:id,cost_per_product'])
+            ->with(['product:id,cost_price,stock', 'expenseRecord:id,cost_per_product'])
             ->when($query->hasSearch(), fn ($builder) => $builder
                 ->where('product_name', 'like', $query->likePattern()))
             ->latest()
